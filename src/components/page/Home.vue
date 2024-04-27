@@ -23,6 +23,8 @@ import {
 import Recorder from '@/components/Recorder.vue';
 import { useVideo } from '@/composables/videoStore';
 import VideoPlayer from "../VideoPlayer.vue";
+import { version } from '../../../package.json';
+
 const { video } = useVideo();
 </script>
 
@@ -84,7 +86,7 @@ const { video } = useVideo();
         </aside>
         <div class="flex flex-col">
             <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
-                <h1 class="text-xl font-semibold">SCR.RCD</h1>
+                <h1 class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
                 <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
                     <Button size="sm" class="ml-auto gap-1.5 text-sm">
                         <Github class="size-5 text-white" />
