@@ -1,9 +1,55 @@
-# Vue 3 + TypeScript + Vite
+# SCR.RCD
+
+SCR.RCD is a web-based screen recording application that allows users to record their screens directly in the browser. Unlike traditional screen recording tools that save recordings on servers, SCR.RCD stores recorded videos locally on the client-side using IndexedDB, ensuring user privacy and security.
+
+
+
+## Features
+
+- **Browser-based:** SCR.RCD is entirely browser-based, eliminating the need for users to install additional software or plugins.
+- **Screen Recording:** Record your screen with ease directly within your browser window.
+- **Local Storage:** Recorded videos are stored locally on the client-side using IndexedDB, providing enhanced privacy and security.
+- **Simple Interface:** The user interface is intuitive and easy to use, making screen recording accessible to everyone.
+- **Customizable Settings:** Customize recording settings such as frame rate, resolution, and audio options to suit your needs.
+
+## Development
+
+### Vue 3 + TypeScript + Vite
 
 This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-## Recommended Setup
+### Recommended Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (previously Volar) and disable Vetur
 
 - Use [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) for performing the same type checking from the command line, or for generating d.ts files for SFCs.
+
+### Reusable Components
+
+- see [here](https://www.shadcn-vue.com/docs/introduction.html)
+
+To get started with SCR.RCD, follow these steps:
+
+1. Clone the repository: `git clone https://github.com/iqbaladinur/scr.rcd.git`
+2. run ```npm install``` inside scr.rcd directory
+3. run ```npm run dev``` to start local development
+
+## Compatibility
+
+SCR.RCD is compatible with modern web browsers that support the necessary APIs for screen recording and IndexedDB storage. We recommend using the latest versions of browsers such as Google Chrome, Mozilla Firefox, or Microsoft Edge for the best experience.
+
+## Contributing
+
+We welcome contributions from the community to improve SCR.RCD. If you'd like to contribute, please follow these guidelines:
+
+1. Fork the repository.
+2. Create a new branch: `git checkout -b feature/my-feature`.
+3. Make your changes and commit them: `git commit -am 'Add new feature'`.
+4. Push to the branch: `git push origin feature/my-feature`.
+5. Submit a pull request.
+
+Please ensure that your code adheres to our coding standards and includes appropriate documentation for any new features or changes.
+
+## Support
+
+If you encounter any issues or have any questions about SCR.RCD, please feel free to [open an issue](https://github.com/iqbaladinur/scr.rcd/issues) on GitHub, and we'll be happy to assist you.
