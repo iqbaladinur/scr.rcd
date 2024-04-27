@@ -5,6 +5,12 @@ import { onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Play, StopCircle, Trash, Mic } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+    TooltipProvider
+} from "@/components/ui/tooltip";
 
 interface Props {
     mobile?: boolean;
@@ -20,9 +26,13 @@ const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
 
 // get media screen recorder
-async function captureScreen() {
+async function captureScreen(audio: boolean = false) {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
+        audio: audio ? {
+            echoCancellation: true,
+            noiseSuppression: true,
+        } : false
     });
     return screenStream;
 }
@@ -77,7 +87,7 @@ const startRecordingWithAudioMic = async () => {
 const startRecording = async() => {
     try {
         recordedType.value = 'scr';
-        const stream = await captureScreen();
+        const stream = await captureScreen(true);
         mediaRecorder.value = new MediaRecorder(stream);
         const recordedChunks: Blob[] = [];
 
@@ -112,12 +122,12 @@ const saveToIndexedDB = async (blob: Blob) => {
         const now = new Date();
         const videoName = `vid-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString()}`;
         const data:VideoSaved = { name: videoName, blob };
-        await db.videos.add(data);
+        const id = await db.videos.add(data);
         toast({
             title: 'Video Saved',
             description: 'Successfully saved a video'
         });
-        getRecordedVideosFromIndexedDB();
+        getRecordedVideosFromIndexedDB(id);
     } catch (error: any) {
         toast({
             title: 'Failed Saving',
@@ -135,9 +145,13 @@ const stopRecording = () => {
 
 // get data from indexed db
 
-const getRecordedVideosFromIndexedDB = async() => {
+const getRecordedVideosFromIndexedDB = async(id?: number) => {
     try {
         recordedVideos.value = await db.videos.reverse().toArray();
+        if (id) {
+            const data = recordedVideos.value.find(dt => dt.id === id) || null;
+            selectedVideo.value = <VideoSaved | null>data;
+        }
     } catch (error) {
         console.log(error);
     }
@@ -172,14 +186,25 @@ onMounted(() => {
 <div class="relative flex-col items-start gap-8 md:flex" :class="{ 'hidden': !mobile }">
     <div class="grid w-full items-start gap-6">
     <div class="w-full grid gap-2">
-        <Button v-if="!isRecording" @click="startRecording()">
-            <Play class="size-5 mr-4"></Play>
-            Start Recording Screen Only
-        </Button>
-        <Button v-if="!isRecording" @click="startRecordingWithAudioMic()">
-            <Mic class="size-5 mr-4"></Mic>
-            Start Recording with Mic
-        </Button>
+        <template v-if="!isRecording">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button @click="startRecording()">
+                            <Play class="size-5 mr-4"></Play>
+                            Start Recording Screen Only
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" :side-offset="5">
+                        Audio only available on chrome tab.
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <Button @click="startRecordingWithAudioMic()">
+                <Mic class="size-5 mr-4"></Mic>
+                Start Recording with Mic
+            </Button>
+        </template>
         <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
             <StopCircle class="size-5 mr-4"></StopCircle>
             Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}

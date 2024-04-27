@@ -19,6 +19,15 @@ import {
     TooltipTrigger,
     TooltipProvider
 } from "@/components/ui/tooltip";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
 import Recorder from '@/components/Recorder.vue';
 import { useVideo } from '@/composables/videoStore';
 import VideoPlayer from "../VideoPlayer.vue";
@@ -51,7 +60,8 @@ const { video } = useVideo();
                 <!-- mobile drawer -->
                 <Drawer>
                     <DrawerTrigger as-child>
-                        <Button variant="ghost" size="icon" class="rounded-lg bg-muted md:hidden" aria-label="Playground">
+                        <Button variant="ghost" size="icon" class="rounded-lg bg-muted md:hidden"
+                            aria-label="Playground">
                             <Videotape class="size-5" />
                         </Button>
                     </DrawerTrigger>
@@ -71,18 +81,31 @@ const { video } = useVideo();
             <nav class="mt-auto grid gap-1 p-2">
                 <TooltipProvider>
                     <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button variant="ghost" size="icon" class="mt-auto rounded-lg" aria-label="Help">
-                                <LifeBuoy class="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" :side-offset="5"> Help </TooltipContent>
+                        <Dialog>
+                            <DialogTrigger>
+                                <TooltipTrigger as-child>
+                                    <Button variant="ghost" size="icon" class="mt-auto rounded-lg" aria-label="Help">
+                                        <LifeBuoy class="size-5" />
+                                    </Button>
+                                </TooltipTrigger>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>About this Web App</DialogTitle>
+                                    <DialogDescription>
+                                        This app is carefully built for screen and audio recording, prioritizing your privacy. It securely stores all recorded data directly in your web browser, so you can trust that your information stays safe and private. With no need for server storage, your data remains under your control, offering a simple and reliable solution for recording needs.
+                                    </DialogDescription>
+                                </DialogHeader>
+                            </DialogContent>
+                        </Dialog>
+                        <TooltipContent side="right" :side-offset="5"> About </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </nav>
         </aside>
         <div class="flex flex-col">
-            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
+            <header
+                class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
                 <h1 class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
                 <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
                     <Button size="sm" class="ml-auto gap-1.5 text-sm">
