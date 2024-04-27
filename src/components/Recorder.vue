@@ -3,7 +3,7 @@ import { db } from '@/db/db';
 import { Button } from "@/components/ui/button";
 import { onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Play, StopCircle, Trash } from "lucide-vue-next";
+import { Play, StopCircle, Trash, Mic } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
 
 interface Props {
@@ -12,41 +12,82 @@ interface Props {
 
 defineProps<Props>();
 
-const recordedVideoBlob = ref<Blob | null>(null);
 const recordedVideos = ref<VideoSaved[]>([]);
 const { toast } = useToast();
 const { video: selectedVideo } = useVideo();
 const isRecording = ref<boolean>(false);
-const mediaRecorder = ref<MediaRecorder | null>(null)
+const mediaRecorder = ref<MediaRecorder | null>(null);
+const recordedType = ref<'scr' | 'scr_mic'>('scr');
 
-const startRecording = () => {
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
-        mediaRecorder.value = new MediaRecorder(stream);
-        const recordedChunks: Blob[] = [];
-
-        mediaRecorder.value.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
-        mediaRecorder.value.onstop = () => {
-            isRecording.value = false;
-            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            recordedVideoBlob.value = recordedBlob;
-            const tracks = stream.getTracks();
-            tracks.forEach((tr) => tr.stop());
-            saveToIndexedDB(recordedBlob);
-        };
-
-        mediaRecorder.value.start();
-        isRecording.value = true;
-        // setTimeout(() => {
-        //     mediaRecorder.stop();
-        // }, 10000);
-    }).catch(error => {
-        console.error('Error accessing media devices:', error);
+// get media screen recorder
+async function captureScreen() {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
     });
+    return screenStream;
+}
+
+async function captureAudio() {
+    const config = {
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 44100,
+        },
+        video: false,
+    };
+    const audioStream = await navigator.mediaDevices.getUserMedia(config);
+    return audioStream;
+}
+
+const startRecordingWithAudioMic = async () => {
+    recordedType.value = 'scr_mic';
+    const audioStream = await captureAudio();
+    const screenStream = await captureScreen();
+    const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
+    mediaRecorder.value = new MediaRecorder(stream);
+    const recordedChunks: Blob[] = [];
+
+    mediaRecorder.value.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+
+    mediaRecorder.value.onstop = () => {
+        isRecording.value = false;
+        const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        const tracks = stream.getTracks();
+        tracks.forEach((tr) => tr.stop());
+        saveToIndexedDB(recordedBlob);
+    };
+
+    mediaRecorder.value.start(200);
+    isRecording.value = true;
+}
+
+const startRecording = async() => {
+    recordedType.value = 'scr';
+    const stream = await captureScreen();
+    mediaRecorder.value = new MediaRecorder(stream);
+    const recordedChunks: Blob[] = [];
+
+    mediaRecorder.value.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+
+    mediaRecorder.value.onstop = () => {
+        isRecording.value = false;
+        const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        const tracks = stream.getTracks();
+        tracks.forEach((tr) => tr.stop());
+        saveToIndexedDB(recordedBlob);
+    };
+
+    mediaRecorder.value.start(200);
+    isRecording.value = true;
 };
 
 // Function to save the recorded video to IndexedDB
@@ -71,7 +112,7 @@ const saveToIndexedDB = async (blob: Blob) => {
 
 const stopRecording = () => {
     if (mediaRecorder.value) {
-        mediaRecorder.value.stop();
+        mediaRecorder.value?.stop();
     }
 }
 
@@ -112,14 +153,20 @@ onMounted(() => {
 <template>
 <div class="relative flex-col items-start gap-8 md:flex" :class="{ 'hidden': !mobile }">
     <div class="grid w-full items-start gap-6">
-    <Button v-if="!isRecording" @click="startRecording()">
-        <Play class="size-5 mr-4"></Play>
-        Start Recording
-    </Button>
-    <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
-        <StopCircle class="size-5 mr-4"></StopCircle>
-        Stop Recording
-    </Button>
+    <div class="w-full grid gap-2">
+        <Button v-if="!isRecording" @click="startRecording()">
+            <Play class="size-5 mr-4"></Play>
+            Start Recording Screen Only
+        </Button>
+        <Button v-if="!isRecording" @click="startRecordingWithAudioMic()">
+            <Mic class="size-5 mr-4"></Mic>
+            Start Recording with Mic
+        </Button>
+        <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
+            <StopCircle class="size-5 mr-4"></StopCircle>
+            Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
+        </Button>
+    </div>
     <fieldset class="rounded-lg border p-4">
         <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
         <ul>
