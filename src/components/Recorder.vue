@@ -41,53 +41,69 @@ async function captureAudio() {
 }
 
 const startRecordingWithAudioMic = async () => {
-    recordedType.value = 'scr_mic';
-    const audioStream = await captureAudio();
-    const screenStream = await captureScreen();
-    const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
-    mediaRecorder.value = new MediaRecorder(stream);
-    const recordedChunks: Blob[] = [];
+    try {
+        recordedType.value = 'scr_mic';
+        const audioStream = await captureAudio();
+        const screenStream = await captureScreen();
+        const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
+        mediaRecorder.value = new MediaRecorder(stream);
+        const recordedChunks: Blob[] = [];
 
-    mediaRecorder.value.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-            recordedChunks.push(event.data);
-        }
-    };
+        mediaRecorder.value.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
 
-    mediaRecorder.value.onstop = () => {
-        isRecording.value = false;
-        const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-        const tracks = stream.getTracks();
-        tracks.forEach((tr) => tr.stop());
-        saveToIndexedDB(recordedBlob);
-    };
+        mediaRecorder.value.onstop = () => {
+            isRecording.value = false;
+            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            const tracks = stream.getTracks();
+            tracks.forEach((tr) => tr.stop());
+            saveToIndexedDB(recordedBlob);
+        };
 
-    mediaRecorder.value.start(200);
-    isRecording.value = true;
+        mediaRecorder.value.start(200);
+        isRecording.value = true;
+    } catch (error: any) {
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+    }
 }
 
 const startRecording = async() => {
-    recordedType.value = 'scr';
-    const stream = await captureScreen();
-    mediaRecorder.value = new MediaRecorder(stream);
-    const recordedChunks: Blob[] = [];
+    try {
+        recordedType.value = 'scr';
+        const stream = await captureScreen();
+        mediaRecorder.value = new MediaRecorder(stream);
+        const recordedChunks: Blob[] = [];
 
-    mediaRecorder.value.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-            recordedChunks.push(event.data);
-        }
-    };
+        mediaRecorder.value.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
 
-    mediaRecorder.value.onstop = () => {
-        isRecording.value = false;
-        const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-        const tracks = stream.getTracks();
-        tracks.forEach((tr) => tr.stop());
-        saveToIndexedDB(recordedBlob);
-    };
+        mediaRecorder.value.onstop = () => {
+            isRecording.value = false;
+            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            const tracks = stream.getTracks();
+            tracks.forEach((tr) => tr.stop());
+            saveToIndexedDB(recordedBlob);
+        };
 
-    mediaRecorder.value.start(200);
-    isRecording.value = true;
+        mediaRecorder.value.start(200);
+        isRecording.value = true;
+    } catch (error: any) {
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+    }
 };
 
 // Function to save the recorded video to IndexedDB
@@ -106,6 +122,7 @@ const saveToIndexedDB = async (blob: Blob) => {
         toast({
             title: 'Failed Saving',
             description: error?.message,
+            variant: 'destructive'
         });
     }
 };
@@ -141,7 +158,8 @@ const deleteData = async (video: VideoSaved) => {
     } catch (error: any) {
         toast({
             title: 'Failed',
-            description: error?.message
+            description: error?.message,
+            variant: 'destructive'
         });
     }
 }
