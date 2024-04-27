@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
     LifeBuoy,
-    SwitchCamera,
     Videotape,
     Github
 } from "lucide-vue-next";
@@ -32,9 +31,7 @@ const { video } = useVideo();
     <div class="grid h-screen w-full pl-[53px]">
         <aside class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
             <div class="border-b p-2">
-                <Button variant="outline" size="icon" aria-label="Home">
-                    <SwitchCamera class="size-5 fill-background" />
-                </Button>
+                <img src="/favicon.png" alt="scr.rcd" class="w-10 h-10 border rounded-md">
             </div>
             <nav class="grid gap-1 p-2">
                 <TooltipProvider>
