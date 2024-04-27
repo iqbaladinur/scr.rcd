@@ -5,7 +5,6 @@ import {
     Videotape,
     Github
 } from "lucide-vue-next";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Drawer,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import Recorder from '@/components/Recorder.vue';
 import { useVideo } from '@/composables/videoStore';
+import VideoPlayer from "../VideoPlayer.vue";
 const { video } = useVideo();
 </script>
 
@@ -83,22 +83,22 @@ const { video } = useVideo();
             </nav>
         </aside>
         <div class="flex flex-col">
-            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
+            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
                 <h1 class="text-xl font-semibold">SCR.RCD</h1>
-                <Button size="sm" class="ml-auto gap-1.5 text-sm">
-                    <Github class="size-5 text-white" />
-                </Button>
+                <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" class="ml-auto gap-1.5 text-sm">
+                        <Github class="size-5 text-white" />
+                    </Button>
+                </a>
             </header>
-            <main class="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-3">
+            <main class="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-4">
                 <Recorder />
 
                 <!-- output -->
-                <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 lg:col-span-2">
-                    <Badge variant="outline" class="absolute right-3 top-3">
-                        Output
-                    </Badge>
-                    <div class="flex-1 pt-5">
-                        {{ video }}
+                <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 lg:col-span-3">
+                    <VideoPlayer v-if="video" :video="video" />
+                    <div v-else class="flex-1 flex items-center justify-center">
+                        No video selected
                     </div>
                 </div>
             </main>
