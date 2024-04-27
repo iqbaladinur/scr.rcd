@@ -3,7 +3,7 @@ import { db } from '@/db/db';
 import { Button } from "@/components/ui/button";
 import { onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Play, Trash } from "lucide-vue-next";
+import { Play, StopCircle, Trash } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
 
 interface Props {
@@ -34,6 +34,8 @@ const startRecording = () => {
             isRecording.value = false;
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             recordedVideoBlob.value = recordedBlob;
+            const tracks = stream.getTracks();
+            tracks.forEach((tr) => tr.stop());
             saveToIndexedDB(recordedBlob);
         };
 
@@ -51,7 +53,7 @@ const startRecording = () => {
 const saveToIndexedDB = async (blob: Blob) => { 
     try {
         const now = new Date();
-        const videoName = `vid_rcd_${now.toLocaleDateString()}-${now.toLocaleTimeString()}`;
+        const videoName = `vid-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString()}`;
         const data:VideoSaved = { name: videoName, blob };
         await db.videos.add(data);
         toast({
@@ -83,6 +85,23 @@ const getRecordedVideosFromIndexedDB = async() => {
     }
 };
 
+const deleteData = async (video: VideoSaved) => {
+    try {
+        const id = <number>video.id;
+        await db.videos.where('id').equals(id).delete();
+        toast({
+            title: 'Data deleted',
+            description: 'Successfully delete a video'
+        });
+        getRecordedVideosFromIndexedDB();
+    } catch (error: any) {
+        toast({
+            title: 'Failed',
+            description: error?.message
+        });
+    }
+}
+
 onMounted(() => {
     getRecordedVideosFromIndexedDB();
 });
@@ -91,9 +110,11 @@ onMounted(() => {
 <div class="relative flex-col items-start gap-8 md:flex" :class="{ 'hidden': !mobile }">
     <div class="grid w-full items-start gap-6">
     <Button v-if="!isRecording" @click="startRecording()">
+        <Play class="size-5 mr-4"></Play>
         Start Recording
     </Button>
-    <Button v-if="isRecording" @click="stopRecording()" class="animate-pulse" variant="destructive">
+    <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
+        <StopCircle class="size-5 mr-4"></StopCircle>
         Stop Recording
     </Button>
     <fieldset class="rounded-lg border p-4">
@@ -101,16 +122,16 @@ onMounted(() => {
         <ul>
             <li
                 v-for="video in recordedVideos"
+                class="flex items-center hover:bg-slate-100 py-2 px-3 rounded-md cursor-pointer gap-3"
+                @click="selectedVideo = video"
             >
-                <div class="flex items-center hover:bg-slate-100 py-2 px-3 rounded-md cursor-pointer">
-                    <p class="flex-1 truncate">{{ video.name }}</p>
-                    <div class="flex items-center gap-3 justify-end flex-shrink-0">
-                        <Play class="w-4 h-4"></Play>
-                        <Button size="icon" variant="ghost" class="w-4 h-4 text-red-500 hover:text-red-600">
-                            <Trash class="w-4 h-4"></Trash>
-                        </Button>
-                    </div>
-                </div>
+                <p class="truncate flex-1">{{ video.name }}</p>
+                <Button size="icon" variant="ghost" class="w-4 h-4 text-red-500 hover:text-red-700" @click.stop="deleteData(video)">
+                    <Trash class="w-4 h-4"></Trash>
+                </Button>
+            </li>
+            <li v-if="recordedVideos.length === 0">
+                No data saved.
             </li>
         </ul>
     </fieldset>
