@@ -195,7 +195,7 @@ onMounted(() => {
                             Start Recording Screen Only
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" :side-offset="5">
+                    <TooltipContent side="bottom" :side-offset="5" :class="{ 'hidden': mobile }">
                         Audio only available on chrome tab.
                     </TooltipContent>
                 </Tooltip>
