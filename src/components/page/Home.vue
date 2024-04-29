@@ -39,7 +39,7 @@ const { video } = useVideo();
     <div class="grid h-screen w-full pl-[53px]">
         <aside class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
             <div class="border-b p-2">
-                <img src="/favicon.png" alt="scr.rcd" class="w-10 h-10 border rounded-md">
+                <img src="/logo.png" alt="scr.rcd" class="rounded-md w-auto h-10 bg-[#886ED2]">
             </div>
             <nav class="grid gap-1 p-2">
                 <TooltipProvider>
@@ -103,8 +103,7 @@ const { video } = useVideo();
             </nav>
         </aside>
         <div class="flex flex-col">
-            <header
-                class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
+            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
                 <h1 class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
                 <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
                     <Button size="sm" class="ml-auto gap-1.5 text-sm">
