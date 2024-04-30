@@ -87,6 +87,7 @@ async function LoadFfmpeg() {
         loading.loadingScript = false;
         loading.loadedScript = true;
     } catch (error: any) {
+        console.log(error);
         toast({
             title: 'Failed',
             description: error?.message,
