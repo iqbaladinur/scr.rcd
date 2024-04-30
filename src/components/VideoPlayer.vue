@@ -72,19 +72,27 @@ const disabledDownloadAsMp4 = computed(() => {
 });
 
 async function LoadFfmpeg() {
-    loading.loadedScript = false;
-    loading.loadingScript = true;
-    ffmpeg.on('log', ({ message: msg }: Log) => {
-        console.log(msg);
-        loading.msg = msg;
-    });
-    await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.wasm`, 'application/wasm'),
-        workerURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.worker.js`, 'text/javascript')
-    });
-    loading.loadingScript = false;
-    loading.loadedScript = true;
+    try {
+        loading.loadedScript = false;
+        loading.loadingScript = true;
+        ffmpeg.on('log', ({ message: msg }: Log) => {
+            console.log(msg);
+            loading.msg = msg;
+        });
+        await ffmpeg.load({
+            coreURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.js`, 'text/javascript'),
+            wasmURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.wasm`, 'application/wasm'),
+            workerURL: await toBlobURL(`${baseURLFFmpeg}/ffmpeg-core.worker.js`, 'text/javascript')
+        });
+        loading.loadingScript = false;
+        loading.loadedScript = true;
+    } catch (error: any) {
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+    }
 }
 
 async function downloadAsMp4() {
