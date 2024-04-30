@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {
-    LifeBuoy,
     Videotape,
-    Github
+    Github,
+    Sun,
+    MoonStar,
+    Info
 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,20 +28,30 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import Recorder from '@/components/Recorder.vue';
 import { useVideo } from '@/composables/videoStore';
 import VideoPlayer from "../VideoPlayer.vue";
 import { version } from '../../../package.json';
+import { useColorMode } from '@vueuse/core';
+
+const colorMode = useColorMode();
 
 const { video } = useVideo();
+function toggleColorMode() {
+    if (colorMode.value === 'dark') {
+        colorMode.value = 'light';
+    } else {
+        colorMode.value = 'dark';
+    }
+}
 </script>
 
 <template>
     <div class="grid h-screen w-full pl-[53px]">
         <aside class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
             <div class="border-b p-2">
-                <img src="/logo.png" alt="scr.rcd" class="rounded-md w-auto h-10 bg-[#886ED2]">
+                <img src="/logo-tone.png" alt="scr.rcd" class="rounded-md w-auto h-10">
             </div>
             <nav class="grid gap-1 p-2">
                 <TooltipProvider>
@@ -84,7 +96,7 @@ const { video } = useVideo();
                             <DialogTrigger>
                                 <TooltipTrigger as-child>
                                     <Button variant="ghost" size="icon" class="mt-auto rounded-lg" aria-label="Help">
-                                        <LifeBuoy class="size-5" />
+                                        <Info class="size-5" />
                                     </Button>
                                 </TooltipTrigger>
                             </DialogTrigger>
@@ -105,11 +117,17 @@ const { video } = useVideo();
         <div class="flex flex-col">
             <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
                 <h1 class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
-                <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" class="ml-auto gap-1.5 text-sm">
-                        <Github class="size-5 text-white" />
+                <div class="flex items-center justify-end gap-2">
+                    <Button size="sm" class="ml-auto gap-1.5 text-sm" @click="toggleColorMode()" variant="outline">
+                        <Sun v-if="colorMode === 'dark'" class="size-5" />
+                        <MoonStar v-else class="size-5 fill-black dark:fill-white" />
                     </Button>
-                </a>
+                    <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" class="ml-auto gap-1.5 text-sm" variant="outline">
+                            <Github class="size-5 fill-black dark:fill-white" /> Github
+                        </Button>
+                    </a>
+                </div>
             </header>
             <main class="flex flex-1 gap-4 overflow-auto p-4">
                 <Recorder />

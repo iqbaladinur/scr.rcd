@@ -13,14 +13,10 @@
                 <Button size="sm" @click="downloadVideo()">
                     Download as webm
                 </Button>
-                <div class="flex gap-2 relative items-center">
-                    <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
-                        <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                        <span class="mr-3">
-                            {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
-                        </span>
-                    </Button>
-                </div>
+                <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
+                    <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
+                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
+                </Button>
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">

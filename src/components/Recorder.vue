@@ -221,8 +221,8 @@ onMounted(() => {
             <ul>
                 <li
                     v-for="video in recordedVideos"
-                    class="flex items-center hover:bg-slate-100 py-2 px-3 rounded-md cursor-pointer gap-3"
-                    :class="{ 'bg-slate-100': selectedVideo?.id === video.id }"
+                    class="flex mb-1 items-center hover:bg-slate-100 dark:hover:bg-slate-100/10 py-2 px-3 rounded-md cursor-pointer gap-3"
+                    :class="{ 'bg-slate-100 dark:bg-slate-100/10': selectedVideo?.id === video.id }"
                     @click="selectedVideo = video"
                 >
                     <p class="truncate flex-1">{{ video.name }}</p>
