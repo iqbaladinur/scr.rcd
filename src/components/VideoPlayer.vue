@@ -61,9 +61,6 @@ const props = defineProps<Props>();
 const { toast } = useToast();
 const videoUrl = computed(() => {
     if (props.video) {
-        if (!loading.loadedScript && !loading.loadingScript) {
-            LoadFfmpeg();
-        }
         const url = URL.createObjectURL(props.video.blob);
         return url;
     }
@@ -146,6 +143,8 @@ const downloadVideo = () => {
 }
 
 onMounted(async() => {
-    
+    if (!loading.loadedScript && !loading.loadingScript) {
+        LoadFfmpeg();
+    }
 })
 </script>
