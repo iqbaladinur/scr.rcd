@@ -70,7 +70,7 @@ const startRecordingWithAudioMic = async () => {
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
             tracks.forEach((tr) => tr.stop());
-            saveToIndexedDB(recordedBlob);
+            saveToIndexedDB(recordedBlob, true);
         };
 
         mediaRecorder.value.start(200);
@@ -101,8 +101,14 @@ const startRecording = async() => {
             isRecording.value = false;
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
-            tracks.forEach((tr) => tr.stop());
-            saveToIndexedDB(recordedBlob);
+            let audioEnable = false;
+            tracks.forEach((tr) => {
+                if (tr.kind === 'audio') {
+                    audioEnable = true;
+                };
+                tr.stop();
+            });
+            saveToIndexedDB(recordedBlob, audioEnable);
         };
 
         mediaRecorder.value.start(200);
@@ -117,11 +123,11 @@ const startRecording = async() => {
 };
 
 // Function to save the recorded video to IndexedDB
-const saveToIndexedDB = async (blob: Blob) => { 
+const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => { 
     try {
         const now = new Date();
-        const videoName = `vid-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString()}`;
-        const data:VideoSaved = { name: videoName, blob };
+        const videoName = `vid-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString().replace(/:/gi, '-')}`;
+        const data:VideoSaved = { name: videoName, blob, audio: audio };
         const id = await db.videos.add(data);
         toast({
             title: 'Video Saved',

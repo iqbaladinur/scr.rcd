@@ -116,10 +116,7 @@ const { video } = useVideo();
 
                 <!-- output -->
                 <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 lg:col-span-3">
-                    <VideoPlayer v-if="video" :video="video" />
-                    <div v-else class="flex-1 flex items-center justify-center">
-                        No video selected
-                    </div>
+                    <VideoPlayer :video="video" />
                 </div>
             </main>
         </div>
