@@ -111,11 +111,11 @@ const { video } = useVideo();
                     </Button>
                 </a>
             </header>
-            <main class="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-4">
+            <main class="flex flex-1 gap-4 overflow-auto p-4">
                 <Recorder />
 
                 <!-- output -->
-                <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 lg:col-span-3">
+                <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 flex-1">
                     <VideoPlayer :video="video" />
                 </div>
             </main>

@@ -1,7 +1,7 @@
 <template>
     <div v-if="video">
         <div class="flex items-center justify-end gap-4">
-            <div v-if="!video.audio" class="flex-1">
+            <div class="flex-1">
                 <fieldset class="rounded-lg border px-3 py-1.5 -mt-1">
                     <legend class="px-1 text-xs font-medium">Logs</legend>
                     <p class="text-xs">
@@ -20,16 +20,6 @@
                             {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
                         </span>
                     </Button>
-                    <TooltipProvider v-if="!!video.audio">
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Info class="size-3 absolute right-0 mr-2 text-white"></Info>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" :side-offset="5">
-                                Available only for non audio video.
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
                 </div>
             </div>
         </div>
@@ -52,13 +42,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Loader, Info } from "lucide-vue-next";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-    TooltipProvider
-} from "@/components/ui/tooltip";
+import { Loader } from "lucide-vue-next";
 
 const baseURLFFmpeg = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
 
@@ -77,7 +61,7 @@ const props = defineProps<Props>();
 const { toast } = useToast();
 const videoUrl = computed(() => {
     if (props.video) {
-        if (!loading.loadedScript && !props.video.audio && !loading.loadingScript) {
+        if (!loading.loadedScript && !loading.loadingScript) {
             LoadFfmpeg();
         }
         const url = URL.createObjectURL(props.video.blob);
@@ -87,7 +71,7 @@ const videoUrl = computed(() => {
 });
 
 const disabledDownloadAsMp4 = computed(() => {
-    return loading.converting || props.video?.audio || !loading.loadedScript;
+    return loading.converting || !loading.loadedScript;
 });
 
 async function LoadFfmpeg() {
@@ -117,7 +101,17 @@ async function downloadAsMp4() {
         const dataFile = await fetchFile(props.video.blob);
         const res = await ffmpeg.writeFile(webmName, dataFile);
         console.log('write:', res);
-        const execute = await ffmpeg.exec(['-i', webmName, mp4Name]);
+        const execute = await ffmpeg.exec([
+            '-i',
+            webmName,
+            '-c:v',
+            'copy',
+            '-c:a',
+            'aac',
+            '-strict',
+            'experimental',
+            mp4Name
+        ]);
         console.log('exec:', execute);
         const data = await ffmpeg.readFile(mp4Name);
         const urlDownload = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' }));

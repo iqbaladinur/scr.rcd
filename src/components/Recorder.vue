@@ -189,52 +189,52 @@ onMounted(() => {
 });
 </script>
 <template>
-<div class="relative flex-col items-start gap-8 md:flex" :class="{ 'hidden': !mobile }">
-    <div class="grid w-full items-start gap-6">
-    <div class="w-full grid gap-2">
-        <template v-if="!isRecording">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button @click="startRecording()">
-                            <Play class="size-5 mr-4"></Play>
-                            Start Recording Screen Only
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" :side-offset="5" :class="{ 'hidden': mobile }">
-                        Audio only available on chrome tab.
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <Button @click="startRecordingWithAudioMic()">
-                <Mic class="size-5 mr-4"></Mic>
-                Start Recording with Mic
-            </Button>
-        </template>
-        <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
-            <StopCircle class="size-5 mr-4"></StopCircle>
-            Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
-        </Button>
-    </div>
-    <fieldset class="rounded-lg border p-4">
-        <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
-        <ul>
-            <li
-                v-for="video in recordedVideos"
-                class="flex items-center hover:bg-slate-100 py-2 px-3 rounded-md cursor-pointer gap-3"
-                :class="{ 'bg-slate-100': selectedVideo?.id === video.id }"
-                @click="selectedVideo = video"
-            >
-                <p class="truncate flex-1">{{ video.name }}</p>
-                <Button size="icon" variant="ghost" class="w-4 h-4 text-red-500 hover:text-red-700" @click.stop="deleteData(video)">
-                    <Trash class="w-4 h-4"></Trash>
+<div class="relative flex-col items-start gap-8 md:flex md:w-[310px]" :class="{ 'hidden': !mobile }">
+    <div class="flex flex-col w-full items-start gap-6">
+        <div class="w-full grid gap-2">
+            <template v-if="!isRecording">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button @click="startRecording()">
+                                <Play class="size-5 mr-4"></Play>
+                                Start Recording Screen Only
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" :side-offset="5" :class="{ 'hidden': mobile }">
+                            Audio only available on chrome tab.
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <Button @click="startRecordingWithAudioMic()">
+                    <Mic class="size-5 mr-4"></Mic>
+                    Start Recording with Mic
                 </Button>
-            </li>
-            <li v-if="recordedVideos.length === 0">
-                No data saved.
-            </li>
-        </ul>
-    </fieldset>
+            </template>
+            <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
+                <StopCircle class="size-5 mr-4"></StopCircle>
+                Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
+            </Button>
+        </div>
+        <fieldset class="rounded-lg border p-4 w-full">
+            <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
+            <ul>
+                <li
+                    v-for="video in recordedVideos"
+                    class="flex items-center hover:bg-slate-100 py-2 px-3 rounded-md cursor-pointer gap-3"
+                    :class="{ 'bg-slate-100': selectedVideo?.id === video.id }"
+                    @click="selectedVideo = video"
+                >
+                    <p class="truncate flex-1">{{ video.name }}</p>
+                    <Button size="icon" variant="ghost" class="w-4 h-4 text-red-500 hover:text-red-700" @click.stop="deleteData(video)">
+                        <Trash class="w-4 h-4"></Trash>
+                    </Button>
+                </li>
+                <li v-if="recordedVideos.length === 0">
+                    No data saved.
+                </li>
+            </ul>
+        </fieldset>
     </div>
 </div>
 </template>
