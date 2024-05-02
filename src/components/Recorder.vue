@@ -27,12 +27,14 @@ const recordedType = ref<'scr' | 'scr_mic'>('scr');
 
 // get media screen recorder
 async function captureScreen(audio: boolean = false) {
+    const audioConstraints:MediaTrackConstraints = {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+    }
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: audio ? {
-            echoCancellation: true,
-            noiseSuppression: true,
-        } : false
+        audio: audio ? audioConstraints : false
     });
     return screenStream;
 }
@@ -197,7 +199,7 @@ onMounted(() => {
                     <Tooltip>
                         <TooltipTrigger as-child>
                             <Button @click="startRecording()">
-                                <Play class="size-5 mr-4"></Play>
+                                <Play class="size-5 mr-4 fill-white dark:fill-black"></Play>
                                 Start Recording Screen Only
                             </Button>
                         </TooltipTrigger>

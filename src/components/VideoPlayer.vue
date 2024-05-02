@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-2 rounded-xl border">
+            <div class="p-2 rounded-xl border flex items-start justify-center">
                 <video id="videoPlayer" controls :src="videoUrl" class="rounded-lg">
                     Your browser does not support the video tag.
                 </video>
