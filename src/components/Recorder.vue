@@ -26,6 +26,12 @@ const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
 
 // get media screen recorder
+const audioConstraints:MediaTrackConstraints = {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+}
+
 async function captureScreen(audio: boolean = false) {
     const audioConstraints:MediaTrackConstraints = {
         echoCancellation: false,
@@ -42,8 +48,7 @@ async function captureScreen(audio: boolean = false) {
 async function captureAudio() {
     const config = {
         audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
+            ...audioConstraints,
             sampleRate: 44100,
         },
         video: false,
