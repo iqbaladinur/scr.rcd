@@ -4,13 +4,14 @@ SCR.RCD is a web-based screen recording application that allows users to record 
 
 ![scr.rcd preview](https://raw.githubusercontent.com/iqbaladinur/scr.rcd/master/preview/preview.png)
 
-## Features
+## Features Roadmaps
 
-- **Browser-based:** SCR.RCD is entirely browser-based, eliminating the need for users to install additional software or plugins.
-- **Screen Recording:** Record your screen with ease directly within your browser window.
-- **Local Storage:** Recorded videos are stored locally on the client-side using IndexedDB, providing enhanced privacy and security.
-- **Simple Interface:** The user interface is intuitive and easy to use, making screen recording accessible to everyone.
-- **Customizable Settings:** Customize recording settings such as frame rate, resolution, and audio options to suit your needs.
+- [x] **Browser-based:** SCR.RCD is entirely browser-based, eliminating the need for users to install additional software or plugins.
+- [x] **Screen Recording:** Record your screen with ease directly within your browser window.
+- [x] **Local Storage:** Recorded videos are stored locally on the client-side using IndexedDB, providing enhanced privacy and security.
+- [x] **Simple Interface:** The user interface is intuitive and easy to use, making screen recording accessible to everyone.
+- [ ] **Customizable Settings:** Customize recording settings such as frame rate, resolution, and audio options.
+- [ ] whats next ...?
 
 ## Development
 
