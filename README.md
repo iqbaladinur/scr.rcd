@@ -1,5 +1,8 @@
-# SCR.RCD
+<p align="center">
+  <img src="https://scr-rcd.cloud/logo-tone.png" alt="scr.rcd logo">
+</p>
 
+#
 SCR.RCD is a web-based screen recording application that allows users to record their screens directly in the browser. Unlike traditional screen recording tools that save recordings on servers, SCR.RCD stores recorded videos locally on the client-side using IndexedDB, ensuring user privacy and security.
 
 ![scr.rcd preview](https://raw.githubusercontent.com/iqbaladinur/scr.rcd/master/preview/preview.png)
@@ -54,3 +57,6 @@ Please ensure that your code adheres to our coding standards and includes approp
 ## Support
 
 If you encounter any issues or have any questions about SCR.RCD, please feel free to [open an issue](https://github.com/iqbaladinur/scr.rcd/issues) on GitHub, and we'll be happy to assist you.
+
+## License
+This app is open-sourced software licensed under the [MIT LICENSE](https://raw.githubusercontent.com/iqbaladinur/scr.rcd/master/LICENSE).
