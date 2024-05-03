@@ -91,6 +91,39 @@ const startRecordingWithAudioMic = async () => {
     }
 }
 
+const startRecordingAudioMic = async () => {
+    try {
+        recordedType.value = 'scr_mic';
+        const audioStream = await captureAudio();
+        const stream = new MediaStream([...audioStream.getTracks()]);
+        mediaRecorder.value = new MediaRecorder(stream);
+        const recordedChunks: Blob[] = [];
+
+        mediaRecorder.value.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.value.onstop = () => {
+            isRecording.value = false;
+            const recordedBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+            const tracks = stream.getTracks();
+            tracks.forEach((tr) => tr.stop());
+            saveToIndexedDB(recordedBlob, true);
+        };
+
+        mediaRecorder.value.start(200);
+        isRecording.value = true;
+    } catch (error: any) {
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+    }
+}
+
 const startRecording = async() => {
     try {
         recordedType.value = 'scr';
@@ -133,12 +166,13 @@ const startRecording = async() => {
 const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => { 
     try {
         const now = new Date();
-        const videoName = `vid-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString().replace(/:/gi, '-')}`;
+        const prefix = blob.type === 'audio/wav' ? 'aud' : 'vid';
+        const videoName = `${prefix}-rcd-${now.toLocaleDateString().replace(/\//gi, '-')}-${now.toLocaleTimeString().replace(/:/gi, '-')}`;
         const data:VideoSaved = { name: videoName, blob, audio: audio };
         const id = await db.videos.add(data);
         toast({
-            title: 'Video Saved',
-            description: 'Successfully saved a video'
+            title: 'File Saved',
+            description: 'Successfully saved a file'
         });
         getRecordedVideosFromIndexedDB(id);
     } catch (error: any) {
@@ -179,7 +213,7 @@ const deleteData = async (video: VideoSaved) => {
         }
         toast({
             title: 'Data deleted',
-            description: 'Successfully delete a video'
+            description: 'Successfully delete a file'
         });
         getRecordedVideosFromIndexedDB();
     } catch (error: any) {
@@ -200,7 +234,7 @@ onMounted(() => {
     <div class="flex flex-col w-full items-start gap-6">
         <div class="w-full grid gap-2">
             <template v-if="!isRecording">
-                <TooltipProvider>
+                <TooltipProvider v-if="!mobile">
                     <Tooltip>
                         <TooltipTrigger as-child>
                             <Button @click="startRecording()">
@@ -213,9 +247,13 @@ onMounted(() => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                <Button @click="startRecordingWithAudioMic()">
+                <Button v-if="!mobile" @click="startRecordingWithAudioMic()">
                     <Mic class="size-5 mr-4"></Mic>
                     Start Recording with Mic
+                </Button>
+                <Button v-if="mobile" @click="startRecordingAudioMic()">
+                    <Mic class="size-5 mr-4"></Mic>
+                    Start Recording audio
                 </Button>
             </template>
             <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
