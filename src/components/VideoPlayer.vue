@@ -10,15 +10,13 @@
                 </fieldset>
             </div>  
             <div class="flex items-center justify-end gap-3">
-                <template>
-                    <Button size="sm" @click="downloadFile(false)">
-                        Download as webm
-                    </Button>
-                    <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
-                        <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                        {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
-                    </Button>
-                </template>
+                <Button size="sm" @click="downloadFile(false)">
+                    Download as webm
+                </Button>
+                <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
+                    <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
+                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
+                </Button>
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
