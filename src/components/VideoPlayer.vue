@@ -1,7 +1,7 @@
 <template>
     <div v-if="video">
-        <div class="flex items-center justify-end gap-4">
-            <div v-if="!isMobile" class="flex-1">
+        <div v-if="!isMobile" class="flex items-center justify-end gap-4">
+            <div class="flex-1">
                 <fieldset class="rounded-lg border px-3 py-1.5 -mt-1">
                     <legend class="px-1 text-xs font-medium">Logs</legend>
                     <p class="text-xs">
@@ -10,46 +10,50 @@
                 </fieldset>
             </div>  
             <div class="flex items-center justify-end gap-3">
-                <template v-if="!isMobile">
-                    <Button size="sm" @click="downloadFile(false)">
-                        Download as webm
-                    </Button>
-                    <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
-                        <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                        {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
-                    </Button>
-                </template>
-                <Button v-else size="sm" @click="downloadFile(true)">
-                    Download
+                <Button size="sm" @click="downloadFile(false)">
+                    Download as webm
+                </Button>
+                <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
+                    <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
+                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
                 </Button>
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-2 rounded-xl border flex items-start justify-center">
+            <div class="p-2 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
                 <video v-if="!isMobile" id="videoPlayer" controls :src="videoUrl" class="rounded-lg">
                     Your browser does not support the video tag.
                 </video>
-                <div v-else class="w-full flex flex-col items-center gap-2">
-                    <p>{{ video.name }}</p>
-                    <audio controls :src="videoUrl">
+                <div v-else class="w-full flex flex-col items-center gap-2 p-2">
+                    <div class="w-full h-[200px] bg-black/50 rounded flex items-center justify-center">
+                        <AudioLines class="size-20"></AudioLines>
+                    </div>
+                    <p class="w-full text-center">{{ video.name }}</p>
+                    <audio controls :src="videoUrl" class="w-full mt-10">
                         Your browser does not support the audio tag.
                     </audio>
                 </div>
             </div>
+            <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
+                <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
+                Download Audio
+            </Button>
         </div>
     </div>
-    <div v-else class="flex-1 flex items-center justify-center">
-        No video selected
+    <div v-else class="flex-1 flex items-center justify-center flex-col gap-2">
+        <Rabbit class="size-16"></Rabbit>
+        A rabbit is animal...
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive } from 'vue';
 import { Button } from "@/components/ui/button";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Loader } from "lucide-vue-next";
+import { Loader, Rabbit, AudioLines, ArrowBigDownDash } from "lucide-vue-next";
+import { useIsMobile } from '@/composables/isMobileStore';
 
 const baseURLFFmpeg = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
 
@@ -66,6 +70,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const { toast } = useToast();
+const { isMobile } = useIsMobile();
 const videoUrl = computed(() => {
     if (props.video) {
         const url = URL.createObjectURL(props.video.blob);
@@ -77,12 +82,6 @@ const videoUrl = computed(() => {
 const disabledDownloadAsMp4 = computed(() => {
     return loading.converting || !loading.loadedScript;
 });
-
-const isMobile = ref<boolean>(false);
-
-function checkMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
 
 async function LoadFfmpeg() {
     try {
@@ -165,7 +164,6 @@ const downloadFile = (audio: boolean = false) => {
 }
 
 onMounted(async() => {
-    isMobile.value = checkMobile();
     if (!loading.loadedScript && !loading.loadingScript && !isMobile.value) {
         LoadFfmpeg();
     }
