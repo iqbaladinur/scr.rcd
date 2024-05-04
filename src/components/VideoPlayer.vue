@@ -36,7 +36,7 @@
                     </audio>
                 </div>
             </div>
-            <Button class="mt-5 rounded-full" size="sm" variant="outline">
+            <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
                 <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
                 Download Audio
             </Button>
