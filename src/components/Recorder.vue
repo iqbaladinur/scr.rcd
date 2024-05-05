@@ -33,11 +33,6 @@ const audioConstraints:MediaTrackConstraints = {
 }
 
 async function captureScreen(audio: boolean = false) {
-    const audioConstraints:MediaTrackConstraints = {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-    }
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: audio ? audioConstraints : false

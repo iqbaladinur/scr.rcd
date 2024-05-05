@@ -29,7 +29,7 @@
                         <AudioLines class="size-20"></AudioLines>
                     </div>
                     <p class="w-full text-center">{{ video.name }}</p>
-                    <audio controls :src="videoUrl" class="w-full mt-10">
+                    <audio ref="audioPlayer" controls :src="videoUrl" class="w-full mt-10">
                         Your browser does not support the audio tag.
                     </audio>
                 </div>
@@ -46,7 +46,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { Button } from "@/components/ui/button";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
@@ -71,6 +71,8 @@ interface Props {
 const props = defineProps<Props>();
 const { toast } = useToast();
 const { isMobile } = useIsMobile();
+const audioPlayer = ref<HTMLAudioElement | undefined>(undefined);
+
 const videoUrl = computed(() => {
     if (props.video) {
         const url = URL.createObjectURL(props.video.blob);
@@ -133,7 +135,6 @@ async function downloadAsMp4() {
         console.log('exec:', execute);
         const data = await ffmpeg.readFile(mp4Name);
         const urlDownload = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' }));
-        console.log(urlDownload)
         const a = <HTMLAnchorElement>document.createElement('a');
         document.body.appendChild(a);
         a.href = urlDownload;
