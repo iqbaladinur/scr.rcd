@@ -21,7 +21,15 @@
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
             <div class="p-2 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
-                <video v-if="!isMobile" id="videoPlayer" controls :src="videoUrl" class="rounded-lg">
+                <video
+                    v-if="!isMobile"
+                    id="videoPlayer"
+                    ref="videoPlayerRef"
+                    controls
+                    :src="videoUrl"
+                    class="rounded-lg"
+                    :class="{ 'vertical-video': isVertical }"
+                    @loadedmetadata="handleMetaData">
                     Your browser does not support the video tag.
                 </video>
                 <div v-else class="w-full flex flex-col items-center gap-2 p-2">
@@ -72,6 +80,8 @@ const props = defineProps<Props>();
 const { toast } = useToast();
 const { isMobile } = useIsMobile();
 const audioPlayer = ref<HTMLAudioElement | undefined>(undefined);
+const videoPlayerRef = ref<HTMLVideoElement | undefined>();
+const isVertical = ref<boolean>(false);
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -164,9 +174,20 @@ const downloadFile = (audio: boolean = false) => {
     a.click();
 }
 
+function handleMetaData(e: Event) {
+    const vidEl = <HTMLVideoElement>e.target;
+    isVertical.value = vidEl.videoWidth < vidEl.videoHeight;
+}
+
 onMounted(async() => {
     if (!loading.loadedScript && !loading.loadingScript && !isMobile.value) {
         LoadFfmpeg();
     }
 })
 </script>
+
+<style scoped lang="css">
+.vertical-video {
+    height: calc(100vh - 200px);
+}
+</style>
