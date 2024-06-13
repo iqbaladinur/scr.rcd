@@ -203,6 +203,9 @@ function stopWebCam() {
     }
     if (webcamSrc.value) {
         webcamSrc.value.srcObject = null;
+        if (document.pictureInPictureElement) {
+            document.exitPictureInPicture();
+        }
     }
 }
 
@@ -336,5 +339,5 @@ onMounted(() => {
     </div>
 </div>
 <!-- video webcam stream -->
-<video ref="webcamSrc" class="fixed bottom-10 right-10 w-[200px] h-[200px] z-[100] rounded-lg" autoplay />
+<video ref="webcamSrc" :class="{ 'hidden': !isRecording }" class="fixed bottom-10 right-10 w-[200px] h-[200px] z-[100] rounded-lg" autoplay />
 </template>
