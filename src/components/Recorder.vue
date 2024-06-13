@@ -316,22 +316,6 @@ onBeforeUnmount(() => {
                         <Mic class="size-5 mr-4"></Mic>
                         Start Recording with Mic
                     </Button>
-                    <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
-                        <label for="enable-camera" class="text-sm">
-                            <span v-if="disableCameraView">Camera Not Found</span>
-                            <TooltipProvider v-else>
-                                <Tooltip>
-                                    <TooltipTrigger as-child>
-                                        <span>Enable Camera View</span>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right" :side-offset="10" :class="{ 'hidden': mobile }">
-                                        Camera view only recorded if <br> you select entire screen capture.
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </label>
-                        <Switch v-model:checked="enableCameraView" id="enable-camera" :disabled="disableCameraView" @update:checked="toggleWebCamp" />
-                    </div>
                 </template>
                 <Button v-if="mobile" @click="startRecordingOnlyAudioMic()">
                     <Mic class="size-5 mr-4"></Mic>
@@ -342,6 +326,22 @@ onBeforeUnmount(() => {
                 <StopCircle class="size-5 mr-4"></StopCircle>
                 Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
             </Button>
+            <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
+                <label for="enable-camera" class="text-sm">
+                    <span v-if="disableCameraView">Camera Not Found</span>
+                    <TooltipProvider v-else>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <span>Enable Camera View</span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" :side-offset="10" :class="{ 'hidden': mobile }">
+                                Camera view only recorded if <br> you select entire screen capture.
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </label>
+                <Switch v-model:checked="enableCameraView" id="enable-camera" :disabled="disableCameraView" @update:checked="toggleWebCamp" />
+            </div>
         </div>
         <fieldset class="rounded-lg border p-4 w-full">
             <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
