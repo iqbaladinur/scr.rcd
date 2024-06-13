@@ -50,7 +50,7 @@
     </div>
     <div v-else class="flex-1 flex items-center justify-center flex-col gap-2">
         <Rabbit class="size-16"></Rabbit>
-        A rabbit is animal...
+        Nothing to display...
     </div>
 </template>
 <script setup lang="ts">

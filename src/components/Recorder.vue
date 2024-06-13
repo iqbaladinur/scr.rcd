@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { db } from '@/db/db';
 import { Button } from "@/components/ui/button";
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Play, StopCircle, Trash, Mic } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
@@ -26,7 +26,7 @@ const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
 const enableCameraView = ref<boolean>(false);
-const allowCameraView = ref<boolean>(false);
+const disableCameraView = ref<boolean>(false);
 const webcamStream = ref<MediaStream | null>(null);
 const webcamSrc = ref<HTMLVideoElement | null>(null);
 
@@ -34,10 +34,10 @@ const checkCameraAvailability = async () => {
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const hasWebcam = devices.some(device => device.kind === 'videoinput');
-        allowCameraView.value = hasWebcam;
+        disableCameraView.value = !hasWebcam;
     } catch (err) {
         console.error('Error accessing media devices.', err);
-        allowCameraView.value = false;
+        disableCameraView.value = true;
     }
 };
 
@@ -70,7 +70,6 @@ async function captureAudio() {
 
 const startRecordingWithAudioMic = async () => {
     try {
-        await streamWebcam();
         recordedType.value = 'scr_mic';
         const audioStream = await captureAudio();
         const screenStream = await captureScreen();
@@ -140,7 +139,6 @@ const startRecordingOnlyAudioMic = async () => {
 
 const startRecording = async() => {
     try {
-        await streamWebcam();
         recordedType.value = 'scr';
         const stream = await captureScreen(true);
         mediaRecorder.value = new MediaRecorder(stream);
@@ -179,7 +177,7 @@ const startRecording = async() => {
     }
 };
 
-async function streamWebcam() {
+async function startWebcam() {
     if (!enableCameraView.value) {
         return;
     }
@@ -207,6 +205,19 @@ function stopWebCam() {
             document.exitPictureInPicture();
         }
     }
+}
+
+function toggleWebCamp() {
+    if (!enableCameraView.value) {
+        stopWebCam();
+        return;
+    }
+    startWebcam();
+}
+
+function handleWebcamPiPLeave() {
+    enableCameraView.value = false;
+    stopWebCam();
 }
 
 // Function to save the recorded video to IndexedDB
@@ -275,7 +286,12 @@ const deleteData = async (video: VideoSaved) => {
 onMounted(() => {
     getRecordedVideosFromIndexedDB();
     checkCameraAvailability();
+    webcamSrc.value?.addEventListener('leavepictureinpicture', handleWebcamPiPLeave);
 });
+
+onBeforeUnmount(() => {
+    webcamSrc.value?.removeEventListener('leavepictureinpicture', handleWebcamPiPLeave);
+})
 </script>
 <template>
 <div class="relative flex-col items-start gap-8 md:flex md:w-[310px]" :class="{ 'hidden': !mobile }">
@@ -300,11 +316,21 @@ onMounted(() => {
                         <Mic class="size-5 mr-4"></Mic>
                         Start Recording with Mic
                     </Button>
-                    <div class="flex items-center gap-2">
-                        <Switch v-model:checked="enableCameraView" id="enable-camera" :disabled="!allowCameraView" />
+                    <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
                         <label for="enable-camera" class="text-sm">
-                            {{ allowCameraView ? 'Enable Camera View' : 'Camera Not Found' }}
+                            <span v-if="disableCameraView">Camera Not Found</span>
+                            <TooltipProvider v-else>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <span>Enable Camera View</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" :side-offset="10" :class="{ 'hidden': mobile }">
+                                        Camera view only recorded if <br> you select entire screen capture.
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </label>
+                        <Switch v-model:checked="enableCameraView" id="enable-camera" :disabled="disableCameraView" @update:checked="toggleWebCamp" />
                     </div>
                 </template>
                 <Button v-if="mobile" @click="startRecordingOnlyAudioMic()">
@@ -339,5 +365,5 @@ onMounted(() => {
     </div>
 </div>
 <!-- video webcam stream -->
-<video ref="webcamSrc" :class="{ 'hidden': !isRecording }" class="fixed bottom-10 right-10 w-[200px] h-[200px] z-[100] rounded-lg" autoplay />
+<video ref="webcamSrc" :class="{ 'hidden': !isRecording }" class="fixed bottom-10 right-10 w-[200px] h-[150px] z-[100] rounded-lg" autoplay />
 </template>
