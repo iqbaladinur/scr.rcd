@@ -27,6 +27,9 @@ const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
 const enableCameraView = ref<boolean>(false);
 const allowCameraView = ref<boolean>(false);
+const webcamStream = ref<MediaStream | null>(null);
+const webcamSrc = ref<HTMLVideoElement | null>(null);
+
 const checkCameraAvailability = async () => {
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -67,6 +70,7 @@ async function captureAudio() {
 
 const startRecordingWithAudioMic = async () => {
     try {
+        await streamWebcam();
         recordedType.value = 'scr_mic';
         const audioStream = await captureAudio();
         const screenStream = await captureScreen();
@@ -85,12 +89,14 @@ const startRecordingWithAudioMic = async () => {
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
             tracks.forEach((tr) => tr.stop());
+            stopWebCam();
             saveToIndexedDB(recordedBlob, true);
         };
 
         mediaRecorder.value.start(200);
         isRecording.value = true;
     } catch (error: any) {
+        stopWebCam();
         toast({
             title: 'Failed',
             description: error?.message,
@@ -99,7 +105,7 @@ const startRecordingWithAudioMic = async () => {
     }
 }
 
-const startRecordingAudioMic = async () => {
+const startRecordingOnlyAudioMic = async () => {
     try {
         recordedType.value = 'scr_mic';
         const audioStream = await captureAudio();
@@ -134,6 +140,7 @@ const startRecordingAudioMic = async () => {
 
 const startRecording = async() => {
     try {
+        await streamWebcam();
         recordedType.value = 'scr';
         const stream = await captureScreen(true);
         mediaRecorder.value = new MediaRecorder(stream);
@@ -156,12 +163,14 @@ const startRecording = async() => {
                 };
                 tr.stop();
             });
+            stopWebCam();
             saveToIndexedDB(recordedBlob, audioEnable);
         };
 
         mediaRecorder.value.start(200);
         isRecording.value = true;
     } catch (error: any) {
+        stopWebCam();
         toast({
             title: 'Failed',
             description: error?.message,
@@ -169,6 +178,33 @@ const startRecording = async() => {
         });
     }
 };
+
+async function streamWebcam() {
+    if (!enableCameraView.value) {
+        return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    webcamStream.value = stream;
+    if (webcamSrc.value) {
+        webcamSrc.value.srcObject = stream;
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+        } else {
+            await webcamSrc.value.play();
+            await webcamSrc.value.requestPictureInPicture();
+        }
+    }
+}
+
+function stopWebCam() {
+    if (webcamStream.value) {
+        const tracks = webcamStream.value.getTracks();
+        tracks.forEach(tr => tr.stop());
+    }
+    if (webcamSrc.value) {
+        webcamSrc.value.srcObject = null;
+    }
+}
 
 // Function to save the recorded video to IndexedDB
 const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => { 
@@ -268,7 +304,7 @@ onMounted(() => {
                         </label>
                     </div>
                 </template>
-                <Button v-if="mobile" @click="startRecordingAudioMic()">
+                <Button v-if="mobile" @click="startRecordingOnlyAudioMic()">
                     <Mic class="size-5 mr-4"></Mic>
                     Start Recording audio
                 </Button>
@@ -299,4 +335,6 @@ onMounted(() => {
         </fieldset>
     </div>
 </div>
+<!-- video webcam stream -->
+<video ref="webcamSrc" class="fixed bottom-10 right-10 w-[200px] h-[200px] z-[100] rounded-lg" autoplay />
 </template>
