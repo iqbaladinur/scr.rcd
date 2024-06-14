@@ -4,7 +4,6 @@ import {
     Github,
     Sun,
     MoonStar,
-    Info
 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,26 +14,13 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-    TooltipProvider
-} from "@/components/ui/tooltip";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import Recorder from '@/components/Recorder.vue';
 import { useVideo } from '@/composables/videoStore';
 import VideoPlayer from "../VideoPlayer.vue";
 import { version } from '../../../package.json';
 import { useColorMode } from '@vueuse/core';
 import { useIsMobile } from "@/composables/isMobileStore";
+import SidebarNavigation from "../SidebarNavigation.vue";
 
 const colorMode = useColorMode();
 const { isMobile } = useIsMobile();
@@ -51,50 +37,10 @@ function toggleColorMode() {
 
 <template>
     <div class="grid h-screen w-full" :class="{ 'pl-[53px]': !isMobile }">
-        <aside v-if="!isMobile" class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
-            <div class="border-b p-2">
-                <img src="/logo-tone.png" alt="scr.rcd" class="rounded-md w-auto h-10">
-            </div>
-            <nav class="grid gap-1 p-2">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button variant="ghost" size="icon" class="rounded-lg bg-muted"
-                                aria-label="Playground">
-                                <Videotape class="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" :side-offset="5">
-                            Recorded Video
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </nav>
-            <nav class="mt-auto grid gap-1 p-2">
-                <TooltipProvider>
-                    <Tooltip>
-                        <Dialog>
-                            <DialogTrigger>
-                                <TooltipTrigger as-child>
-                                    <Button variant="ghost" size="icon" class="mt-auto rounded-lg" aria-label="Help">
-                                        <Info class="size-5" />
-                                    </Button>
-                                </TooltipTrigger>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>About this Web App</DialogTitle>
-                                    <DialogDescription>
-                                        This app is carefully built for screen and audio recording, prioritizing your privacy. It securely stores all recorded data directly in your web browser, so you can trust that your information stays safe and private. With no need for server storage, your data remains under your control, offering a simple and reliable solution for recording needs.
-                                    </DialogDescription>
-                                </DialogHeader>
-                            </DialogContent>
-                        </Dialog>
-                        <TooltipContent side="right" :side-offset="5"> About </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </nav>
-        </aside>
+        <!-- sidebar navigation -->
+        <SidebarNavigation v-if="!isMobile" />
+
+        <!-- header and menu content -->
         <div class="flex flex-col">
             <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
                 <h1 v-if="!isMobile" class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
