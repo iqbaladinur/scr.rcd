@@ -12,6 +12,7 @@ import {
     TooltipTrigger,
     TooltipProvider
 } from "@/components/ui/tooltip";
+import { use60FPS } from '@/composables/videoSettingStore';
 
 interface Props {
     mobile?: boolean;
@@ -22,6 +23,7 @@ defineProps<Props>();
 const recordedVideos = ref<VideoSaved[]>([]);
 const { toast } = useToast();
 const { video: selectedVideo } = useVideo();
+const { get60fps } = use60FPS();
 const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
@@ -48,9 +50,15 @@ const audioConstraints:MediaTrackConstraints = {
     autoGainControl: false,
 }
 
+const videoConstrainsForce60FpsFHD: MediaTrackConstraints = {
+    width: { ideal: 1920, max: 1920 },
+    height: { ideal: 1080, max: 1080 },
+    frameRate: { ideal: 60, max: 60, },
+}
+
 async function captureScreen(audio: boolean = false) {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: get60fps() ? videoConstrainsForce60FpsFHD : true,
         audio: audio ? audioConstraints : false
     });
     return screenStream;
