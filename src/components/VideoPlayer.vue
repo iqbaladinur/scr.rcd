@@ -28,7 +28,7 @@
                     controls
                     :src="videoUrl"
                     class="rounded-lg"
-                    :class="{ 'vertical-video': isVertical, 'w-2/3': !isVertical }"
+                    :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
                     @loadedmetadata="handleMetaData"
                 >
                     Your browser does not support the video tag.
@@ -43,7 +43,7 @@
                     </audio>
                 </div>
             </div>
-            <Editor v-if="!isMobile" :duration="videoDuration" class="mt-4"></Editor>
+            <Editor v-if="!isMobile" :duration="videoDuration" class="mt-4" @resize="handleSeek"></Editor>
             <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
                 <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
                 Download Audio
@@ -184,6 +184,12 @@ function handleMetaData(e: Event) {
     videoDuration.value = vidEl.duration;
 }
 
+function handleSeek(time: { start: number, end: number }) {
+    if (videoPlayerRef.value) {
+        videoPlayerRef.value.currentTime = time.start;
+    }
+}
+
 onMounted(async() => {
     if (!loading.loadedScript && !loading.loadingScript && !isMobile.value) {
         LoadFfmpeg();
@@ -193,6 +199,9 @@ onMounted(async() => {
 
 <style scoped lang="css">
 .vertical-video {
+    height: calc(100vh - 340px);
+}
+.horizontal-video {
     height: calc(100vh - 340px);
 }
 </style>
