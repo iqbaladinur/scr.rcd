@@ -13,6 +13,7 @@ import {
     TooltipProvider
 } from "@/components/ui/tooltip";
 import { use60FPS } from '@/composables/videoSettingStore';
+import fixWebmDuration from "fix-webm-duration";
 
 interface Props {
     mobile?: boolean;
@@ -31,6 +32,7 @@ const enableCameraView = ref<boolean>(false);
 const disableCameraView = ref<boolean>(false);
 const webcamStream = ref<MediaStream | null>(null);
 const webcamSrc = ref<HTMLVideoElement | null>(null);
+const startTime = ref<number>(0);
 
 const checkCameraAvailability = async () => {
     try {
@@ -91,16 +93,19 @@ const startRecordingWithAudioMic = async () => {
             }
         };
 
-        mediaRecorder.value.onstop = () => {
+        mediaRecorder.value.onstop = async() => {
             isRecording.value = false;
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
             tracks.forEach((tr) => tr.stop());
             stopWebCam();
-            saveToIndexedDB(recordedBlob, true);
+            const duration = Date.now() - startTime.value;
+            const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
+            saveToIndexedDB(blobWithDuration, true);
         };
 
         mediaRecorder.value.start(200);
+        startTime.value = Date.now();
         isRecording.value = true;
     } catch (error: any) {
         stopWebCam();
@@ -111,6 +116,49 @@ const startRecordingWithAudioMic = async () => {
         });
     }
 }
+
+const startRecording = async() => {
+    try {
+        recordedType.value = 'scr';
+        const stream = await captureScreen(true);
+        mediaRecorder.value = new MediaRecorder(stream);
+        const recordedChunks: Blob[] = [];
+
+        mediaRecorder.value.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.value.onstop = async () => {
+            isRecording.value = false;
+            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            const tracks = stream.getTracks();
+            let audioEnable = false;
+            tracks.forEach((tr) => {
+                if (tr.kind === 'audio') {
+                    audioEnable = true;
+                };
+                tr.stop();
+            });
+            const duration = Date.now() - startTime.value;
+            const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
+            stopWebCam();
+            saveToIndexedDB(blobWithDuration, audioEnable);
+        };
+
+        mediaRecorder.value.start(200);
+        startTime.value = Date.now();
+        isRecording.value = true;
+    } catch (error: any) {
+        stopWebCam();
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+    }
+};
 
 const startRecordingOnlyAudioMic = async () => {
     try {
@@ -144,46 +192,6 @@ const startRecordingOnlyAudioMic = async () => {
         });
     }
 }
-
-const startRecording = async() => {
-    try {
-        recordedType.value = 'scr';
-        const stream = await captureScreen(true);
-        mediaRecorder.value = new MediaRecorder(stream);
-        const recordedChunks: Blob[] = [];
-
-        mediaRecorder.value.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
-        mediaRecorder.value.onstop = () => {
-            isRecording.value = false;
-            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            const tracks = stream.getTracks();
-            let audioEnable = false;
-            tracks.forEach((tr) => {
-                if (tr.kind === 'audio') {
-                    audioEnable = true;
-                };
-                tr.stop();
-            });
-            stopWebCam();
-            saveToIndexedDB(recordedBlob, audioEnable);
-        };
-
-        mediaRecorder.value.start(200);
-        isRecording.value = true;
-    } catch (error: any) {
-        stopWebCam();
-        toast({
-            title: 'Failed',
-            description: error?.message,
-            variant: 'destructive'
-        });
-    }
-};
 
 async function startWebcam() {
     if (!enableCameraView.value) {

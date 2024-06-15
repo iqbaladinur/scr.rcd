@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-2 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
+            <div class="p-4 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
                 <video
                     v-if="!isMobile"
                     id="videoPlayer"
@@ -28,8 +28,9 @@
                     controls
                     :src="videoUrl"
                     class="rounded-lg"
-                    :class="{ 'vertical-video': isVertical }"
-                    @loadedmetadata="handleMetaData">
+                    :class="{ 'vertical-video': isVertical, 'w-2/3': !isVertical }"
+                    @loadedmetadata="handleMetaData"
+                >
                     Your browser does not support the video tag.
                 </video>
                 <div v-else class="w-full flex flex-col items-center gap-2 p-2">
@@ -42,6 +43,7 @@
                     </audio>
                 </div>
             </div>
+            <Editor v-if="!isMobile" :duration="videoDuration" class="mt-4"></Editor>
             <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
                 <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
                 Download Audio
@@ -62,6 +64,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Loader, Rabbit, AudioLines, ArrowBigDownDash } from "lucide-vue-next";
 import { useIsMobile } from '@/composables/isMobileStore';
+import Editor from "@/components/Editor.vue";
 
 const baseURLFFmpeg = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
 
@@ -82,6 +85,7 @@ const { isMobile } = useIsMobile();
 const audioPlayer = ref<HTMLAudioElement | undefined>(undefined);
 const videoPlayerRef = ref<HTMLVideoElement | undefined>();
 const isVertical = ref<boolean>(false);
+const videoDuration = ref<number>(0);
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -177,6 +181,7 @@ const downloadFile = (audio: boolean = false) => {
 function handleMetaData(e: Event) {
     const vidEl = <HTMLVideoElement>e.target;
     isVertical.value = vidEl.videoWidth < vidEl.videoHeight;
+    videoDuration.value = vidEl.duration;
 }
 
 onMounted(async() => {
@@ -188,6 +193,6 @@ onMounted(async() => {
 
 <style scoped lang="css">
 .vertical-video {
-    height: calc(100vh - 200px);
+    height: calc(100vh - 340px);
 }
 </style>
