@@ -43,7 +43,7 @@
                     </audio>
                 </div>
             </div>
-            <VideoCutter v-if="!isMobile && isFinite(videoDuration)" :duration="videoDuration" class="mt-4" @resize="handleSeek">
+            <VideoCutter v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter" :duration="videoDuration" class="mt-4" @resize="handleSeek">
                 <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration">
                     <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                     Download Cut Duration
@@ -61,7 +61,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button } from "@/components/ui/button";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
@@ -95,7 +95,9 @@ const videoDuration = ref<number>(0);
 const durationCut = reactive({
     start: 0,
     end: 0
-})
+});
+const resetVideoCutter = ref(false);
+const timerResetVideoCutter = ref<NodeJS.Timeout | null>(null);
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -103,6 +105,16 @@ const videoUrl = computed(() => {
         return url;
     }
     return '';
+});
+
+watch(() => props.video, () => {
+    if (timerResetVideoCutter.value) {
+        clearTimeout(timerResetVideoCutter.value);
+    }
+    resetVideoCutter.value = true;
+    timerResetVideoCutter.value = setTimeout(() => {
+        resetVideoCutter.value = false;
+    }, 200);
 });
 
 const disabledDownloadAsMp4 = computed(() => {
@@ -194,7 +206,7 @@ async function cutAndDownload() {
     try {
         loading.cutting = true;
         const webmName = `${props.video.name}.webm`;
-        const cuttedName = `${props.video.name}-cutted.webm`;
+        const cuttedName = `${props.video.name}-cutted.mp4`;
         const dataFile = await fetchFile(props.video.blob);
         const res = await ffmpeg.writeFile(webmName, dataFile);
         console.log('write:', res);
@@ -203,10 +215,14 @@ async function cutAndDownload() {
             webmName,
             '-ss',
             `${durationCut.start}`,
-            '-t',
+            '-to',
             `${durationCut.end}`,
-            '-c',
+            '-c:v',
             'copy',
+            '-c:a',
+            'aac',
+            '-strict',
+            'experimental',
             cuttedName
         ]);
         console.log('exec:', execute);
