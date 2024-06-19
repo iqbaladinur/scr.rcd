@@ -8,7 +8,7 @@
                 <ResizableHandle with-handle />
                 <ResizablePanel :default-size="0" @resize="handleResize('right', $event)"/>
             </ResizablePanelGroup>
-            <div ref="waveLength" class="w-full h-[50px] bg-white rounded-lg flex items-center justify-center px-4">
+            <div ref="waveLength" class="w-full h-[50px] bg-white dark:bg-muted rounded-lg flex items-center justify-center px-4">
                 <AudioLines v-for="(i) in getWaveSoundlength" :key="`logo_${i}`" class="w-7 h-7"></AudioLines>
             </div>
         </div>

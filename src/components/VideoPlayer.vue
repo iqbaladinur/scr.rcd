@@ -30,6 +30,7 @@
                     class="rounded-lg"
                     :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
                     @loadedmetadata="handleMetaData"
+                    @timeupdate="handleVideoPlayback"
                 >
                     Your browser does not support the video tag.
                 </video>
@@ -269,6 +270,19 @@ function handleSeek(time: { start: number, end: number }) {
     }
     durationCut.start = time.start;
     durationCut.end = time.end;
+}
+
+function handleVideoPlayback() {
+    if (durationCut.end === 0 || !videoPlayerRef.value) {
+        return;
+    }
+    if (videoPlayerRef.value.currentTime < Math.floor(durationCut.start)) {
+        videoPlayerRef.value.currentTime = durationCut.start;
+    }
+    if (videoPlayerRef.value.currentTime >= durationCut.end) {
+        videoPlayerRef.value.pause();
+        videoPlayerRef.value.currentTime = durationCut.start;
+    }
 }
 
 onMounted(async() => {
