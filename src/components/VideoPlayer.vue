@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-2 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
+            <div class="p-4 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
                 <video
                     v-if="!isMobile"
                     id="videoPlayer"
@@ -28,8 +28,9 @@
                     controls
                     :src="videoUrl"
                     class="rounded-lg"
-                    :class="{ 'vertical-video': isVertical }"
-                    @loadedmetadata="handleMetaData">
+                    :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
+                    @loadedmetadata="handleMetaData"
+                >
                     Your browser does not support the video tag.
                 </video>
                 <div v-else class="w-full flex flex-col items-center gap-2 p-2">
@@ -42,6 +43,12 @@
                     </audio>
                 </div>
             </div>
+            <VideoCutter v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter" :duration="videoDuration" class="mt-4" @resize="handleSeek">
+                <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration">
+                    <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
+                    Download Cut Duration
+                </Button>
+            </VideoCutter>
             <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
                 <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
                 Download Audio
@@ -54,7 +61,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button } from "@/components/ui/button";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
@@ -62,6 +69,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Loader, Rabbit, AudioLines, ArrowBigDownDash } from "lucide-vue-next";
 import { useIsMobile } from '@/composables/isMobileStore';
+import VideoCutter from "@/components/VideoCutter.vue";
 
 const baseURLFFmpeg = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
 
@@ -70,6 +78,7 @@ const loading= reactive({
     converting: false,
     loadedScript: false,
     loadingScript: false,
+    cutting: false,
     msg: ''
 });
 interface Props {
@@ -82,6 +91,13 @@ const { isMobile } = useIsMobile();
 const audioPlayer = ref<HTMLAudioElement | undefined>(undefined);
 const videoPlayerRef = ref<HTMLVideoElement | undefined>();
 const isVertical = ref<boolean>(false);
+const videoDuration = ref<number>(0);
+const durationCut = reactive({
+    start: 0,
+    end: 0
+});
+const resetVideoCutter = ref(false);
+const timerResetVideoCutter = ref<NodeJS.Timeout | null>(null);
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -91,8 +107,22 @@ const videoUrl = computed(() => {
     return '';
 });
 
+watch(() => props.video, () => {
+    if (timerResetVideoCutter.value) {
+        clearTimeout(timerResetVideoCutter.value);
+    }
+    resetVideoCutter.value = true;
+    timerResetVideoCutter.value = setTimeout(() => {
+        resetVideoCutter.value = false;
+    }, 200);
+});
+
 const disabledDownloadAsMp4 = computed(() => {
     return loading.converting || !loading.loadedScript;
+});
+
+const disabledDownloadCuttedDuration = computed(() => {
+    return loading.cutting || !loading.loadedScript;
 });
 
 async function LoadFfmpeg() {
@@ -163,6 +193,59 @@ async function downloadAsMp4() {
     }
 }
 
+async function cutAndDownload() {
+    if (!props.video || durationCut.end === 0) {
+        toast({
+            title: 'Error',
+            description: 'End duration cut not setted',
+            variant: 'destructive'
+        });
+        return
+    }
+
+    try {
+        loading.cutting = true;
+        const webmName = `${props.video.name}.webm`;
+        const cuttedName = `${props.video.name}-cutted.mp4`;
+        const dataFile = await fetchFile(props.video.blob);
+        const res = await ffmpeg.writeFile(webmName, dataFile);
+        console.log('write:', res);
+        const execute = await ffmpeg.exec([
+            '-i',
+            webmName,
+            '-ss',
+            `${durationCut.start}`,
+            '-to',
+            `${durationCut.end}`,
+            '-c:v',
+            'copy',
+            '-c:a',
+            'aac',
+            '-strict',
+            'experimental',
+            cuttedName
+        ]);
+        console.log('exec:', execute);
+        const data = await ffmpeg.readFile(cuttedName);
+        const urlDownload = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' }));
+        const a = <HTMLAnchorElement>document.createElement('a');
+        document.body.appendChild(a);
+        a.href = urlDownload;
+        a.download = cuttedName;
+        a.click();
+        loading.cutting = false;
+    } catch (error: any) {
+        console.log(error);
+        toast({
+            title: 'Failed',
+            description: error?.message,
+            variant: 'destructive'
+        });
+        loading.cutting = false;
+        loading.msg = '';
+    }
+}
+
 const downloadFile = (audio: boolean = false) => {
     if (!videoUrl.value || !props.video) {
         return 
@@ -177,6 +260,15 @@ const downloadFile = (audio: boolean = false) => {
 function handleMetaData(e: Event) {
     const vidEl = <HTMLVideoElement>e.target;
     isVertical.value = vidEl.videoWidth < vidEl.videoHeight;
+    videoDuration.value = vidEl.duration;
+}
+
+function handleSeek(time: { start: number, end: number }) {
+    if (videoPlayerRef.value) {
+        videoPlayerRef.value.currentTime = time.start;
+    }
+    durationCut.start = time.start;
+    durationCut.end = time.end;
 }
 
 onMounted(async() => {
@@ -188,6 +280,9 @@ onMounted(async() => {
 
 <style scoped lang="css">
 .vertical-video {
-    height: calc(100vh - 200px);
+    height: calc(100vh - 360px);
+}
+.horizontal-video {
+    height: calc(100vh - 360px);
 }
 </style>
