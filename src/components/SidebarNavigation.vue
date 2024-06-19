@@ -64,7 +64,6 @@
 </template>
 <script setup lang="ts">
 import {
-    Videotape,
     Info,
     Settings
 } from "lucide-vue-next";
