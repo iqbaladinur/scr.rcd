@@ -23,6 +23,10 @@
                     <label>End</label>
                     <span>{{ (timeStamp.end).toFixed(2) }}</span>
                 </div>
+                <div class="flex justify-between items-center text-green-500">
+                    <label>Length</label>
+                    <span>{{ (timeStamp.end - timeStamp.start).toFixed(2) }}</span>
+                </div>
             </fieldset>
             <slot></slot>
         </div>

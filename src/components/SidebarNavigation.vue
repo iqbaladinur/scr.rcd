@@ -1,23 +1,8 @@
 <template>
     <aside class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
-        <div class="border-b p-2">
+        <div class="p-2 border-b">
             <img src="/logo-tone.png" alt="scr.rcd" class="rounded-md w-auto h-10">
         </div>
-        <nav class="grid gap-1 p-2">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button variant="ghost" size="icon" class="rounded-lg bg-muted"
-                            aria-label="Playground">
-                            <Videotape class="size-5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" :side-offset="5">
-                        Recorded Video
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </nav>
         <nav class="mt-auto grid gap-1 p-2">
             <!-- about -->
             <TooltipProvider>

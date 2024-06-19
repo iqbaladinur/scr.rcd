@@ -36,7 +36,7 @@ function toggleColorMode() {
 </script>
 
 <template>
-    <div class="grid h-screen w-full" :class="{ 'pl-[53px]': !isMobile }">
+    <div class="grid h-screen w-full" :class="{ 'pl-[56px]': !isMobile }">
         <!-- sidebar navigation -->
         <SidebarNavigation v-if="!isMobile" />
 
@@ -65,7 +65,7 @@ function toggleColorMode() {
                 <Recorder v-if="!isMobile" />
 
                 <!-- output -->
-                <div class="relative flex h-full min-h-[50vh] flex-col rounded-sm bg-muted/50 p-4 flex-1" :class="{ 'w-full !rounded-md !bg-muted/0': isMobile }">
+                <div class="relative flex h-full min-h-[50vh] flex-col rounded-lg border p-4 flex-1" :class="{ 'w-full !rounded-md !bg-muted/0': isMobile }">
                     <VideoPlayer :video="video" />
                 </div>
                 <Drawer v-if="isMobile">

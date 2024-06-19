@@ -318,7 +318,7 @@ onBeforeUnmount(() => {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger as-child>
-                                <Button @click="startRecording()">
+                                <Button @click="startRecording()" class="rounded-lg">
                                     <Play class="size-5 mr-4 fill-white dark:fill-black"></Play>
                                     Start Recording Screen Only
                                 </Button>
@@ -328,12 +328,12 @@ onBeforeUnmount(() => {
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                    <Button @click="startRecordingWithAudioMic()">
+                    <Button @click="startRecordingWithAudioMic()" class="rounded-lg">
                         <Mic class="size-5 mr-4"></Mic>
                         Start Recording with Mic
                     </Button>
                 </template>
-                <Button v-if="mobile" @click="startRecordingOnlyAudioMic()">
+                <Button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="rounded-lg">
                     <Mic class="size-5 mr-4"></Mic>
                     Start Recording audio
                 </Button>

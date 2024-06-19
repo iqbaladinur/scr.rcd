@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-4 rounded-xl flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
+            <div class="p-4 rounded-lg flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
                 <video
                     v-if="!isMobile"
                     id="videoPlayer"
@@ -45,9 +45,9 @@
                 </div>
             </div>
             <VideoCutter v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter" :duration="videoDuration" class="mt-4" @resize="handleSeek">
-                <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration">
+                <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2">
                     <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                    Download Cut Duration
+                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Trim and Download' }}
                 </Button>
             </VideoCutter>
             <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
@@ -294,9 +294,9 @@ onMounted(async() => {
 
 <style scoped lang="css">
 .vertical-video {
-    height: calc(100vh - 360px);
+    height: calc(100vh - 375px);
 }
 .horizontal-video {
-    height: calc(100vh - 360px);
+    height: calc(100vh - 375px);
 }
 </style>
