@@ -31,6 +31,8 @@
                     :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
                     @loadedmetadata="handleMetaData"
                     @timeupdate="handleVideoPlayback"
+                    @playing="isVideoPlaying = true"
+                    @pause="isVideoPlaying = false"
                 >
                     Your browser does not support the video tag.
                 </video>
@@ -44,7 +46,13 @@
                     </audio>
                 </div>
             </div>
-            <VideoCutter v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter" :duration="videoDuration" class="mt-4" @resize="handleSeek">
+            <VideoCutter
+                v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter"
+                :duration="videoDuration"
+                :current-time="currentTime"
+                class="mt-4"
+                @resize="handleSeek"
+            >
                 <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2">
                     <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                     {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Trim and Download' }}
@@ -62,7 +70,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { Button } from "@/components/ui/button";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
@@ -97,8 +105,10 @@ const durationCut = reactive({
     start: 0,
     end: 0
 });
+const currentTime = ref(0);
 const resetVideoCutter = ref(false);
 const timerResetVideoCutter = ref<NodeJS.Timeout | null>(null);
+const isVideoPlaying = ref(false);
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -283,13 +293,34 @@ function handleVideoPlayback() {
         videoPlayerRef.value.pause();
         videoPlayerRef.value.currentTime = durationCut.start;
     }
+    currentTime.value = videoPlayerRef.value.currentTime;
+}
+
+function listenKeyPress(e: KeyboardEvent) {
+    if (e.code !== 'Space' || !videoPlayerRef.value) {
+        return;
+    }
+    
+    if (isVideoPlaying.value) {
+        videoPlayerRef.value.pause();
+        return;
+    }
+
+    videoPlayerRef.value.play();
+
 }
 
 onMounted(async() => {
     if (!loading.loadedScript && !loading.loadingScript && !isMobile.value) {
         LoadFfmpeg();
     }
-})
+
+    window.addEventListener('keypress', listenKeyPress);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keypress', listenKeyPress);
+});
 </script>
 
 <style scoped lang="css">

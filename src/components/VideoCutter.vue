@@ -10,6 +10,7 @@
             </ResizablePanelGroup>
             <div ref="waveLength" class="w-full h-[50px] bg-white dark:bg-muted rounded-lg flex items-center justify-center px-4">
                 <AudioLines v-for="(i) in getWaveSoundlength" :key="`logo_${i}`" class="w-7 h-7"></AudioLines>
+                <span class="absolute top-0 w-[2px] h-full bg-red-500 rounded-sm" :style="{ left: `${indicatorPosition}px` }"></span>
             </div>
         </div>
         <div class="flex justify-between items-center mt-4">
@@ -41,7 +42,7 @@ import {
 import { computed, reactive, ref } from "vue";
 import { AudioLines } from "lucide-vue-next";
 
-const props = defineProps<{ duration: number }>();
+const props = defineProps<{ duration: number, currentTime: number }>();
 const emit = defineEmits<{
     (event: 'resize', payload: { start: number, end: number }): void
 }>();
@@ -50,19 +51,27 @@ const waveLength = ref<HTMLDivElement | null>(null);
 const getWaveSoundlength = computed(() => {
     if (waveLength.value) {
         const widthEl = waveLength.value;
-        if (widthEl) {
-            const width = widthEl.offsetWidth;
-            return Math.floor(width/28) - 2;
-        }
-        return 1;
+        const width = widthEl.offsetWidth;
+        return Math.floor(width/28) - 2;
     }
 
     return 1;
 });
+
+const indicatorPosition = computed(() => {
+    if (waveLength.value) {
+        const width = waveLength.value.offsetWidth;
+        const pos = Math.round(width * props.currentTime / props.duration);
+        return pos; // in px
+    }
+    return 0;
+});
+
 const percentageSize = reactive({
     left: 0,
     right: 0
 });
+
 const timeStamp = computed(() => {
     if (!props.duration) {
         return {
