@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { use60FPS } from '@/composables/videoSettingStore';
 import fixWebmDuration from "fix-webm-duration";
+import { useCameraMicSetting } from '@/composables/CameraMicSetting';
 
 interface Props {
     mobile?: boolean;
@@ -33,6 +34,7 @@ const disableCameraView = ref<boolean>(false);
 const webcamStream = ref<MediaStream | null>(null);
 const webcamSrc = ref<HTMLVideoElement | null>(null);
 const startTime = ref<number>(0);
+const { camChanged, defaultCamera, defaultMic } = useCameraMicSetting();
 
 const checkCameraAvailability = async () => {
     try {
@@ -71,6 +73,7 @@ async function captureAudio() {
         audio: {
             ...audioConstraints,
             sampleRate: 44100,
+            deviceId: defaultMic.value ? defaultMic.value.deviceId : undefined
         },
         video: false,
     };
@@ -193,15 +196,20 @@ const startRecordingOnlyAudioMic = async () => {
     }
 }
 
-async function startWebcam() {
+async function startWebcam(byPassPipClose: boolean = false) {
     if (!enableCameraView.value) {
         return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: defaultCamera?.value?.deviceId ? {
+            deviceId: { exact: defaultCamera.value.deviceId }
+        }: true,
+        audio: false
+    });
     webcamStream.value = stream;
     if (webcamSrc.value) {
         webcamSrc.value.srcObject = stream;
-        if (document.pictureInPictureElement) {
+        if (document.pictureInPictureElement && !byPassPipClose) {
             await document.exitPictureInPicture();
         } else {
             await webcamSrc.value.play();
@@ -210,14 +218,14 @@ async function startWebcam() {
     }
 }
 
-function stopWebCam() {
+function stopWebCam(byPassPipClose: boolean = false) {
     if (webcamStream.value) {
         const tracks = webcamStream.value.getTracks();
         tracks.forEach(tr => tr.stop());
     }
     if (webcamSrc.value) {
         webcamSrc.value.srcObject = null;
-        if (document.pictureInPictureElement) {
+        if (document.pictureInPictureElement && !byPassPipClose) {
             document.exitPictureInPicture();
         }
     }
@@ -298,6 +306,15 @@ const deleteData = async (video: VideoSaved) => {
         });
     }
 }
+
+function cameraChangeListener() {
+    if (enableCameraView.value) {
+        stopWebCam(true);
+        startWebcam(true);
+    }
+} 
+
+camChanged.on(cameraChangeListener);
 
 onMounted(() => {
     getRecordedVideosFromIndexedDB();
