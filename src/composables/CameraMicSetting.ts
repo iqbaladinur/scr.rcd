@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 const KEY_AUDIO = 'AUDIO_INPUT';
 const KEY_VIDEO = 'VIDEO_INPUT';
-const KEY_EVENT_CHANGE_MIC = 'EVENT_CHANGE_MIC';
+// const KEY_EVENT_CHANGE_MIC = 'EVENT_CHANGE_MIC';
 const KEY_EVENT_CHANGE_CAM = 'EVENT_CHANGE_CAM';
 
 const defaultMic = ref<MediaDeviceInfo | null>(getValueStored(KEY_AUDIO));
