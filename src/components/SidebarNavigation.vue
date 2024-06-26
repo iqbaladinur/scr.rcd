@@ -1,6 +1,6 @@
 <template>
     <aside class="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
-        <div class="p-2 border-b">
+        <div class="p-2">
             <img src="/logo-tone.png" alt="scr.rcd" class="rounded-md w-auto h-10">
         </div>
         <nav class="mt-auto grid gap-1 p-2">

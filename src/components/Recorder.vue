@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/tooltip";
 import { use60FPS } from '@/composables/videoSettingStore';
 import fixWebmDuration from "fix-webm-duration";
-import { useCameraMicSetting } from '@/composables/CameraMicSetting';
+import { useCameraMicSetting } from '@/composables/cameraMicSetting';
+import { convertBytesAdaptive } from '@/lib/utils';
 
 interface Props {
     mobile?: boolean;
@@ -312,7 +313,7 @@ function cameraChangeListener() {
         stopWebCam(true);
         startWebcam(true);
     }
-} 
+}
 
 camChanged.on(cameraChangeListener);
 
@@ -381,11 +382,14 @@ onBeforeUnmount(() => {
             <ul>
                 <li
                     v-for="video in recordedVideos"
-                    class="flex mb-1 items-center hover:bg-slate-100 dark:hover:bg-slate-100/10 py-2 px-3 rounded-md cursor-pointer gap-3"
+                    class="flex mb-1 items-start hover:bg-slate-100 dark:hover:bg-slate-100/10 py-3 px-3 rounded-md cursor-pointer gap-3 border"
                     :class="{ 'bg-slate-100 dark:bg-slate-100/10': selectedVideo?.id === video.id }"
                     @click="selectedVideo = video"
                 >
-                    <p class="truncate flex-1">{{ video.name }}</p>
+                    <div class="flex-1 block text-sm">
+                        <p class="truncate">{{ video.name }}</p>
+                        <p class="text-xs text-gray-400">{{ convertBytesAdaptive(video.blob.size || 0) }}</p>
+                    </div>
                     <Button size="icon" variant="ghost" class="w-4 h-4 text-red-500 hover:text-red-700" @click.stop="deleteData(video)">
                         <Trash class="w-4 h-4"></Trash>
                     </Button>

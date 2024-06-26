@@ -12,6 +12,9 @@
                         <SelectItem v-for="mic in devicesList.audio" :value="mic.deviceId">
                             {{ mic.label }}
                         </SelectItem>
+                        <p v-if="devicesList.audio.length === 0" class="text-sm text-center">
+                            No audio input detected.
+                        </p>
                     </SelectGroup>
                 </SelectContent>
             </Select>
@@ -25,6 +28,9 @@
                         <SelectItem v-for="cam in devicesList.video" :value="cam.deviceId">
                             {{ cam.label }}
                         </SelectItem>
+                        <p v-if="devicesList.video.length === 0" class="text-sm text-center">
+                            No camera input detected.
+                        </p>
                     </SelectGroup>
                 </SelectContent>
             </Select>
@@ -41,7 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useCameraMicSetting } from '@/composables/CameraMicSetting';
+import { useCameraMicSetting } from '@/composables/cameraMicSetting';
 import { reactive } from 'vue';
 
 const {
