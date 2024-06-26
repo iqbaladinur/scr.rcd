@@ -1,22 +1,42 @@
 import { ref } from 'vue';
-const key = 'forced60fpsFHD';
-const forced60fpsFHD = ref<boolean>(localStorage?.getItem(key) === '1' ? true : false);
+const key = 'force60fpsFHD';
+const keyH256 = 'forceH256';
+const forced60fpsFHD = ref<boolean>(getValueStored(key));
+const forceEncodeWithH264 = ref<boolean>(getValueStored(keyH256));
+
 function set60fps(value: boolean) {
     forced60fpsFHD.value = value;
-    const val = value ? '1' : '0';
-    localStorage.setItem(key, val);
+    storeValueLocalStorage(key, value);
 }
 
-function get60fps() {
-    const value = localStorage?.getItem(key) === '1' ? true : false;
-    forced60fpsFHD.value = value;
-    return forced60fpsFHD.value;
+function setEncodeAsH264(value: boolean) {
+    forceEncodeWithH264.value = value;
+    storeValueLocalStorage(keyH256, value);
+}
+
+function getValueStored(key: string) {
+    if (!localStorage) {
+        return false;
+    }
+
+    const strValue = localStorage.getItem(key);
+    if (strValue) {
+        return JSON.parse(strValue);
+    }
+
+    return false;
+}
+
+function storeValueLocalStorage(key: string, value: boolean) {
+    const strValue = JSON.stringify(value);
+    localStorage.setItem(key, strValue);
 }
 
 const use60FPS = () => ({
     forced60fpsFHD,
+    forceEncodeWithH264,
     set60fps,
-    get60fps,
+    setEncodeAsH264
 })
 export {
     use60FPS
