@@ -26,7 +26,7 @@ defineProps<Props>();
 const recordedVideos = ref<VideoSaved[]>([]);
 const { toast } = useToast();
 const { video: selectedVideo } = useVideo();
-const { get60fps } = use60FPS();
+const { forced60fpsFHD, forceEncodeWithH264 } = use60FPS();
 const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
@@ -61,9 +61,11 @@ const videoConstrainsForce60FpsFHD: MediaTrackConstraints = {
     frameRate: { ideal: 60, max: 60, },
 }
 
+const codech264ForceOptions = { mimeType: 'video/webm;codecs=h264' };
+
 async function captureScreen(audio: boolean = false) {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: get60fps() ? videoConstrainsForce60FpsFHD : true,
+        video: forced60fpsFHD.value ? videoConstrainsForce60FpsFHD : true,
         audio: audio ? audioConstraints : false
     });
     return screenStream;
@@ -88,7 +90,7 @@ const startRecordingWithAudioMic = async () => {
         const audioStream = await captureAudio();
         const screenStream = await captureScreen();
         const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
-        mediaRecorder.value = new MediaRecorder(stream);
+        mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
         const recordedChunks: Blob[] = [];
 
         mediaRecorder.value.ondataavailable = (event) => {
@@ -125,7 +127,7 @@ const startRecording = async() => {
     try {
         recordedType.value = 'scr';
         const stream = await captureScreen(true);
-        mediaRecorder.value = new MediaRecorder(stream);
+        mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
         const recordedChunks: Blob[] = [];
 
         mediaRecorder.value.ondataavailable = (event) => {
