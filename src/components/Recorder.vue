@@ -3,7 +3,7 @@ import { db } from '@/db/db';
 import { Button } from "@/components/ui/button";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Play, StopCircle, Trash, Mic } from "lucide-vue-next";
+import { Play, StopCircle, Trash, Mic, Pause } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
 import { Switch } from "@/components/ui/switch";
 import {
@@ -36,6 +36,7 @@ const webcamStream = ref<MediaStream | null>(null);
 const webcamSrc = ref<HTMLVideoElement | null>(null);
 const startTime = ref<number>(0);
 const { camChanged, defaultCamera, defaultMic } = useCameraMicSetting();
+const isPausedRecord = ref<boolean>(false);
 
 const checkCameraAvailability = async () => {
     try {
@@ -92,6 +93,8 @@ const startRecordingWithAudioMic = async () => {
         const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
         mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
         const recordedChunks: Blob[] = [];
+        const pausedDurations: number[] = [];
+        let pausedStart = Date.now();
 
         mediaRecorder.value.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -101,14 +104,28 @@ const startRecordingWithAudioMic = async () => {
 
         mediaRecorder.value.onstop = async() => {
             isRecording.value = false;
+            if (isPausedRecord.value) {
+                pausedDurations.push(Date.now() - pausedStart);
+                isPausedRecord.value = false;
+            }
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
             tracks.forEach((tr) => tr.stop());
             stopWebCam();
-            const duration = Date.now() - startTime.value;
+            const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
             const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
             saveToIndexedDB(blobWithDuration, true);
         };
+
+        mediaRecorder.value.onpause = () => {
+            pausedStart = Date.now(); 
+            isPausedRecord.value = true;
+        }
+
+        mediaRecorder.value.onresume = () => {
+            pausedDurations.push(Date.now() - pausedStart);
+            isPausedRecord.value = false;
+        }
 
         mediaRecorder.value.start(200);
         startTime.value = Date.now();
@@ -129,6 +146,8 @@ const startRecording = async() => {
         const stream = await captureScreen(true);
         mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
         const recordedChunks: Blob[] = [];
+        const pausedDurations: number[] = [];
+        let pausedStart = Date.now();
 
         mediaRecorder.value.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -138,6 +157,10 @@ const startRecording = async() => {
 
         mediaRecorder.value.onstop = async () => {
             isRecording.value = false;
+            if (isPausedRecord.value) {
+                pausedDurations.push(Date.now() - pausedStart);
+                isPausedRecord.value = false;
+            }
             const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             const tracks = stream.getTracks();
             let audioEnable = false;
@@ -147,11 +170,21 @@ const startRecording = async() => {
                 };
                 tr.stop();
             });
-            const duration = Date.now() - startTime.value;
+            const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
             const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
             stopWebCam();
             saveToIndexedDB(blobWithDuration, audioEnable);
         };
+
+        mediaRecorder.value.onpause = () => {
+            pausedStart = Date.now(); 
+            isPausedRecord.value = true;
+        }
+
+        mediaRecorder.value.onresume = () => {
+            pausedDurations.push(Date.now() - pausedStart);
+            isPausedRecord.value = false;
+        }
 
         mediaRecorder.value.start(200);
         startTime.value = Date.now();
@@ -275,6 +308,20 @@ const stopRecording = () => {
     }
 }
 
+const togglePauseRecording = () => {
+    if (!mediaRecorder.value) {
+        return
+    }
+
+    if(isPausedRecord.value) {
+        mediaRecorder.value.resume();
+        return;
+    }
+    
+    mediaRecorder.value.pause();
+
+}
+
 // get data from indexed db
 
 const getRecordedVideosFromIndexedDB = async(id?: number) => {
@@ -358,10 +405,17 @@ onBeforeUnmount(() => {
                     Start Recording audio
                 </Button>
             </template>
-            <Button v-if="isRecording" @click="stopRecording()" variant="destructive" class="animate-pulse">
-                <StopCircle class="size-5 mr-4"></StopCircle>
-                Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
-            </Button>
+            <template v-if="isRecording">
+                <Button @click="stopRecording()" variant="destructive" :class="{ 'animate-pulse': !isPausedRecord }">
+                    <StopCircle class="size-5 mr-4"></StopCircle>
+                    Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
+                </Button>
+                <Button v-if="!mobile" @click="togglePauseRecording()">
+                    <Pause v-if="!isPausedRecord" class="size-5 mr-4"></Pause>
+                    <Play v-else class="size-5 mr-4"></Play>
+                    {{ isPausedRecord ? 'Resume' : 'Pause' }} Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
+                </Button>
+            </template>
             <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
                 <label for="enable-camera" class="text-sm">
                     <span v-if="disableCameraView">Camera Not Found</span>
