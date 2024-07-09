@@ -329,5 +329,6 @@ onBeforeUnmount(() => {
 }
 .horizontal-video {
     height: calc(100vh - 375px);
+    object-fit: contain;
 }
 </style>
