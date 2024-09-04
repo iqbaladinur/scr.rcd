@@ -72,7 +72,6 @@ import { Settings } from "lucide-vue-next";
 import { Switch } from "@/components/ui/switch";
 import SettingFormInputDevices from "@/components/SettingFormInputDevices.vue";
 import { use60FPS } from "@/composables/videoSettingStore";
-import { Suspense } from "vue";
 
 const { forced60fpsFHD, set60fps, setEncodeAsH264, forceEncodeWithH264 } = use60FPS();
 
