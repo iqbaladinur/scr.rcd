@@ -34,6 +34,8 @@ const enableCameraView = ref<boolean>(false);
 const disableCameraView = ref<boolean>(false);
 const webcamStream = ref<MediaStream | null>(null);
 const webcamSrc = ref<HTMLVideoElement | null>(null);
+const webcamContainer = ref<HTMLDivElement | null>(null);
+const webcamContainerParent = ref<HTMLDivElement | null>(null);
 const startTime = ref<number>(0);
 const { camChanged, defaultCamera, defaultMic } = useCameraMicSetting();
 const isPausedRecord = ref<boolean>(false);
@@ -61,6 +63,8 @@ const videoConstrainsForce60FpsFHD: MediaTrackConstraints = {
     height: { ideal: 1080, max: 1080 },
     frameRate: { ideal: 60, max: 60, },
 }
+
+const PIPWINDOW = ref<any>(null);
 
 const codech264ForceOptions = { mimeType: 'video/webm;codecs=h264' };
 
@@ -232,7 +236,7 @@ const startRecordingOnlyAudioMic = async () => {
     }
 }
 
-async function startWebcam(byPassPipClose: boolean = false) {
+async function startWebcam() {
     if (!enableCameraView.value) {
         return;
     }
@@ -243,26 +247,62 @@ async function startWebcam(byPassPipClose: boolean = false) {
         audio: false
     });
     webcamStream.value = stream;
-    if (webcamSrc.value) {
-        webcamSrc.value.srcObject = stream;
-        if (document.pictureInPictureElement && !byPassPipClose) {
-            await document.exitPictureInPicture();
-        } else {
+    if (webcamSrc.value && webcamContainer.value) {
+        try {
+            webcamSrc.value.srcObject = stream;
             await webcamSrc.value.play();
-            await webcamSrc.value.requestPictureInPicture();
+
+            // Open a Picture-in-Picture window.
+            const Globalwindow = window as any;
+
+            if (!PIPWINDOW.value) {
+                PIPWINDOW.value = await Globalwindow.documentPictureInPicture.requestWindow({
+                    width: webcamContainer.value.clientWidth,
+                    height: webcamContainer.value.clientHeight + 20,
+                });
+
+                PIPWINDOW.value.document.body.style.background = 'black';
+                PIPWINDOW.value.document.body.append(webcamContainer.value);
+
+                PIPWINDOW.value.addEventListener("pagehide", () => {
+                    stopWebCam();
+                });
+
+                PIPWINDOW.value.document.querySelector('#stopButton')?.addEventListener('click', () => {
+                    stopWebCam();
+                })
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error starting web cam.',
+                description: error?.message,
+                variant: 'destructive'
+            });
         }
     }
 }
 
-function stopWebCam(byPassPipClose: boolean = false) {
+function stopWebCam() {
+    enableCameraView.value = false;
     if (webcamStream.value) {
         const tracks = webcamStream.value.getTracks();
         tracks.forEach(tr => tr.stop());
     }
     if (webcamSrc.value) {
         webcamSrc.value.srcObject = null;
-        if (document.pictureInPictureElement && !byPassPipClose) {
-            document.exitPictureInPicture();
+        try {
+            if (PIPWINDOW.value && webcamContainer.value) {
+                webcamContainerParent.value?.append(webcamContainer.value);
+                const Globalwindow = window as any;
+                Globalwindow.documentPictureInPicture.window.close();
+                PIPWINDOW.value = null;
+            }    
+        } catch (error: any) {
+            toast({
+                title: 'Error closing window.',
+                description: error?.message,
+                variant: 'destructive'
+            });
         }
     }
 }
@@ -359,8 +399,8 @@ const deleteData = async (video: VideoSaved) => {
 
 function cameraChangeListener() {
     if (enableCameraView.value) {
-        stopWebCam(true);
-        startWebcam(true);
+        stopWebCam();
+        startWebcam();
     }
 }
 
@@ -374,7 +414,14 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     webcamSrc.value?.removeEventListener('leavepictureinpicture', handleWebcamPiPLeave);
-})
+});
+
+
+// style and function for doc pip;
+const containerWebCamStyle = 'background-color: black; border-radius: 0.5rem; display:flex; flex-direction: column; gap: 16px; align-items: center; padding: 8px;';
+const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.5rem;';
+const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; background-color: rgb(184, 14, 14); border-radius: 5px; width: fit-content; border: none;';
+
 </script>
 <template>
 <div class="relative flex-col items-start gap-8 md:flex md:w-[310px]" :class="{ 'hidden': !mobile }">
@@ -458,5 +505,12 @@ onBeforeUnmount(() => {
     </div>
 </div>
 <!-- video webcam stream -->
-<video ref="webcamSrc" :class="{ 'hidden': !isRecording }" class="fixed bottom-10 right-10 w-[200px] h-[150px] z-[100] rounded-lg" autoplay />
+ <div ref="webcamContainerParent" :class="{ '!hidden': !enableCameraView }" class="z-[100] fixed bottom-10 right-10">
+    <div ref="webcamContainer" :style="containerWebCamStyle">
+        <video ref="webcamSrc" :style="webcamStyle" autoplay />
+        <button id="stopButton" :style="buttonStopStyle">
+            <StopCircle style="'width: 20px; height: 20px; color: white;'"></StopCircle>
+        </button>
+    </div>
+</div>
 </template>
