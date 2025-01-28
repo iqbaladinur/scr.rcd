@@ -419,8 +419,8 @@ onBeforeUnmount(() => {
 
 // style and function for doc pip;
 const containerWebCamStyle = 'background-color: black; border-radius: 0.5rem; display:flex; flex-direction: column; gap: 16px; align-items: center; padding: 8px;';
-const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.5rem;';
-const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; background-color: rgb(184, 14, 14); border-radius: 5px; width: fit-content; border: none;';
+const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.5rem; object-fit: cover; border: 2px solid #1f2937;';
+const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; background-color: rgb(184, 14, 14); border-radius: 5px; border: none; display:flex; align-items: center; justify-content: center;';
 
 </script>
 <template>
@@ -509,7 +509,7 @@ const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; back
     <div ref="webcamContainer" :style="containerWebCamStyle">
         <video ref="webcamSrc" :style="webcamStyle" autoplay />
         <button id="stopButton" :style="buttonStopStyle">
-            <StopCircle style="'width: 20px; height: 20px; color: white;'"></StopCircle>
+            <StopCircle style="width: 20px; height: 20px; color: white;"></StopCircle>
         </button>
     </div>
 </div>
