@@ -50,6 +50,7 @@
                 v-if="!isMobile && isFinite(videoDuration) && !resetVideoCutter"
                 :duration="videoDuration"
                 :current-time="currentTime"
+                :audio-url="videoUrl"
                 class="mt-4"
                 @resize="handleSeek"
             >
