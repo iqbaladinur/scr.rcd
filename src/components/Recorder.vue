@@ -26,7 +26,7 @@ defineProps<Props>();
 const recordedVideos = ref<VideoSaved[]>([]);
 const { toast } = useToast();
 const { video: selectedVideo } = useVideo();
-const { forced60fpsFHD, forceEncodeWithH264 } = use60FPS();
+const { forced60fpsFHD, forceEncodeWithH264, videoQualityMode, videoBitrate, advancedVideoMode, getVideoConstraints, getRecorderOptions } = use60FPS();
 const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
@@ -51,26 +51,26 @@ const checkCameraAvailability = async () => {
     }
 };
 
-// get media screen recorder
 const audioConstraints:MediaTrackConstraints = {
     echoCancellation: false,
     noiseSuppression: false,
     autoGainControl: false,
-}
-
-const videoConstrainsForce60FpsFHD: MediaTrackConstraints = {
-    width: { ideal: 1920, max: 1920 },
-    height: { ideal: 1080, max: 1080 },
-    frameRate: { ideal: 60, max: 60, },
+    sampleRate: 44100,
 }
 
 const PIPWINDOW = ref<any>(null);
 
-const codech264ForceOptions = { mimeType: 'video/webm;codecs=h264' };
-
 async function captureScreen(audio: boolean = false) {
+    const videoConstraints = advancedVideoMode.value 
+        ? {
+            ...getVideoConstraints(videoQualityMode.value, forced60fpsFHD.value),
+            aspectRatio: { ideal: 16/9 },
+            resizeMode: 'crop-and-scale' as any,
+        }
+        : getVideoConstraints(videoQualityMode.value, forced60fpsFHD.value);
+
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: forced60fpsFHD.value ? videoConstrainsForce60FpsFHD : true,
+        video: videoConstraints,
         audio: audio ? audioConstraints : false
     });
     return screenStream;
@@ -80,7 +80,6 @@ async function captureAudio() {
     const config = {
         audio: {
             ...audioConstraints,
-            sampleRate: 44100,
             deviceId: defaultMic.value ? defaultMic.value.deviceId : undefined
         },
         video: false,
@@ -95,7 +94,10 @@ const startRecordingWithAudioMic = async () => {
         const audioStream = await captureAudio();
         const screenStream = await captureScreen();
         const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
-        mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
+        
+        const recorderOptions = getRecorderOptions(videoBitrate.value, forceEncodeWithH264.value);
+        mediaRecorder.value = new MediaRecorder(stream, recorderOptions);
+        
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
@@ -131,7 +133,8 @@ const startRecordingWithAudioMic = async () => {
             isPausedRecord.value = false;
         }
 
-        mediaRecorder.value.start(200);
+        const timeSlice = advancedVideoMode.value ? 100 : 200;
+        mediaRecorder.value.start(timeSlice);
         startTime.value = Date.now();
         isRecording.value = true;
     } catch (error: any) {
@@ -148,7 +151,10 @@ const startRecording = async() => {
     try {
         recordedType.value = 'scr';
         const stream = await captureScreen(true);
-        mediaRecorder.value = new MediaRecorder(stream, forceEncodeWithH264.value ? codech264ForceOptions : undefined);
+        
+        const recorderOptions = getRecorderOptions(videoBitrate.value, forceEncodeWithH264.value);
+        mediaRecorder.value = new MediaRecorder(stream, recorderOptions);
+        
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
@@ -190,7 +196,8 @@ const startRecording = async() => {
             isPausedRecord.value = false;
         }
 
-        mediaRecorder.value.start(200);
+        const timeSlice = advancedVideoMode.value ? 100 : 200;
+        mediaRecorder.value.start(timeSlice);
         startTime.value = Date.now();
         isRecording.value = true;
     } catch (error: any) {
@@ -240,19 +247,28 @@ async function startWebcam() {
     if (!enableCameraView.value) {
         return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: defaultCamera?.value?.deviceId ? {
-            deviceId: { exact: defaultCamera.value.deviceId }
-        }: true,
+    
+    // Enhanced webcam constraints for better quality
+    const webcamConstraints = {
+        video: {
+            ...(defaultCamera?.value?.deviceId ? {
+                deviceId: { exact: defaultCamera.value.deviceId }
+            } : {}),
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+            facingMode: 'user'
+        },
         audio: false
-    });
+    };
+    
+    const stream = await navigator.mediaDevices.getUserMedia(webcamConstraints);
     webcamStream.value = stream;
     if (webcamSrc.value && webcamContainer.value) {
         try {
             webcamSrc.value.srcObject = stream;
             await webcamSrc.value.play();
 
-            // Open a Picture-in-Picture window.
             const Globalwindow = window as any;
 
             if (!PIPWINDOW.value) {
@@ -320,7 +336,6 @@ function handleWebcamPiPLeave() {
     stopWebCam();
 }
 
-// Function to save the recorded video to IndexedDB
 const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => { 
     try {
         const now = new Date();
@@ -361,8 +376,6 @@ const togglePauseRecording = () => {
     mediaRecorder.value.pause();
 
 }
-
-// get data from indexed db
 
 const getRecordedVideosFromIndexedDB = async(id?: number) => {
     try {
@@ -416,16 +429,58 @@ onBeforeUnmount(() => {
     webcamSrc.value?.removeEventListener('leavepictureinpicture', handleWebcamPiPLeave);
 });
 
-
-// style and function for doc pip;
 const containerWebCamStyle = 'background-color: black; border-radius: 0.5rem; display:flex; flex-direction: column; gap: 16px; align-items: center; padding: 8px;';
 const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.5rem; object-fit: cover; border: 2px solid #1f2937;';
 const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; background-color: rgb(184, 14, 14); border-radius: 5px; border: none; display:flex; align-items: center; justify-content: center;';
+
+// Function to get current quality info for display
+const getCurrentQualityInfo = () => {
+    const resolution = videoQualityMode.value;
+    const bitrate = videoBitrate.value;
+    const fps = forced60fpsFHD.value ? '60fps' : '30fps';
+    const codec = forceEncodeWithH264.value ? 'H.264' : 'VP9/VP8';
+    const advanced = advancedVideoMode.value ? 'Advanced' : 'Standard';
+    
+    return {
+        resolution: resolution.toUpperCase(),
+        bitrate: bitrate === 'auto' ? 'Auto' : bitrate === 'high' ? 'High (8Mbps)' : 'Ultra (15Mbps)',
+        fps,
+        codec,
+        mode: advanced
+    };
+};
 
 </script>
 <template>
 <div class="relative flex-col items-start gap-8 md:flex md:w-[310px]" :class="{ 'hidden': !mobile }">
     <div class="flex flex-col w-full items-start gap-6">
+        <!-- Quality Info Display -->
+        <div class="w-full p-3 bg-muted/50 rounded-lg border">
+            <h4 class="text-sm font-medium mb-2">Current Recording Quality</h4>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                    <span class="text-muted-foreground">Resolution:</span>
+                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().resolution }}</span>
+                </div>
+                <div>
+                    <span class="text-muted-foreground">FPS:</span>
+                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().fps }}</span>
+                </div>
+                <div>
+                    <span class="text-muted-foreground">Bitrate:</span>
+                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().bitrate }}</span>
+                </div>
+                <div>
+                    <span class="text-muted-foreground">Codec:</span>
+                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().codec }}</span>
+                </div>
+            </div>
+            <div class="mt-2 text-xs">
+                <span class="text-muted-foreground">Mode:</span>
+                <span class="ml-1 font-medium">{{ getCurrentQualityInfo().mode }}</span>
+            </div>
+        </div>
+
         <div class="w-full grid gap-2">
             <template v-if="!isRecording">
                 <template v-if="!mobile">
@@ -482,7 +537,7 @@ const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; back
         </div>
         <fieldset class="rounded-lg border p-4 w-full">
             <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
-            <ul>
+            <ul class="overflow-y-auto space-y-1" :style="{ height: 'calc(100vh - 446px)' }">
                 <li
                     v-for="video in recordedVideos"
                     class="flex mb-1 items-start hover:bg-slate-100 dark:hover:bg-slate-100/10 py-3 px-3 rounded-md cursor-pointer gap-3 border"
@@ -504,8 +559,7 @@ const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; back
         </fieldset>
     </div>
 </div>
-<!-- video webcam stream -->
- <div ref="webcamContainerParent" :class="{ '!hidden': !enableCameraView }" class="z-[100] fixed bottom-10 right-10">
+<div ref="webcamContainerParent" :class="{ '!hidden': !enableCameraView }" class="z-[100] fixed bottom-10 right-10">
     <div ref="webcamContainer" :style="containerWebCamStyle">
         <video ref="webcamSrc" :style="webcamStyle" autoplay />
         <button id="stopButton" :style="buttonStopStyle">
