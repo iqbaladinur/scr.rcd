@@ -137,6 +137,9 @@ const startRecordingWithAudioMic = async () => {
         mediaRecorder.value.start(timeSlice);
         startTime.value = Date.now();
         isRecording.value = true;
+        
+        // Add event listener for pause/resume button if PiP window exists
+        addPauseResumeEventListener();
     } catch (error: any) {
         stopWebCam();
         toast({
@@ -200,6 +203,9 @@ const startRecording = async() => {
         mediaRecorder.value.start(timeSlice);
         startTime.value = Date.now();
         isRecording.value = true;
+        
+        // Add event listener for pause/resume button if PiP window exists
+        addPauseResumeEventListener();
     } catch (error: any) {
         stopWebCam();
         toast({
@@ -273,8 +279,8 @@ async function startWebcam() {
 
             if (!PIPWINDOW.value) {
                 PIPWINDOW.value = await Globalwindow.documentPictureInPicture.requestWindow({
-                    width: webcamContainer.value.clientWidth,
-                    height: webcamContainer.value.clientHeight + 20,
+                    width: webcamContainer.value.clientWidth + 20,
+                    height: webcamContainer.value.clientHeight + 30,
                 });
 
                 PIPWINDOW.value.document.body.style.background = 'black';
@@ -284,9 +290,25 @@ async function startWebcam() {
                     stopWebCam();
                 });
 
-                PIPWINDOW.value.document.querySelector('#stopButton')?.addEventListener('click', () => {
+                const stopButton = PIPWINDOW.value.document.querySelector('#stopButton');
+                stopButton?.addEventListener('click', () => {
                     stopWebCam();
-                })
+                });
+                
+                // Add glassmorphism hover effects for stop button
+                if (stopButton) {
+                    stopButton.addEventListener('mouseenter', () => {
+                        stopButton.style.background = 'rgba(184, 14, 14, 0.4)';
+                        stopButton.style.transform = 'translateY(-2px) scale(1.02)';
+                        stopButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                    });
+                    
+                    stopButton.addEventListener('mouseleave', () => {
+                        stopButton.style.background = 'rgba(184, 14, 14, 0.25)';
+                        stopButton.style.transform = 'translateY(0) scale(1)';
+                        stopButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                    });
+                }
             }
         } catch (error: any) {
             toast({
@@ -295,6 +317,54 @@ async function startWebcam() {
                 variant: 'destructive'
             });
         }
+    }
+}
+
+function addPauseResumeEventListener() {
+    if (PIPWINDOW.value) {
+        // Remove existing event listener first to avoid duplicates
+        const existingButton = PIPWINDOW.value.document.querySelector('#pauseResumeButton');
+        if (existingButton) {
+            existingButton.removeEventListener('click', togglePauseRecording);
+        }
+        
+        // Add event listener with a small delay to ensure button is rendered
+        setTimeout(() => {
+            const pauseResumeButton = PIPWINDOW.value?.document.querySelector('#pauseResumeButton');
+            const stopButton = PIPWINDOW.value?.document.querySelector('#stopButton');
+            
+            if (pauseResumeButton) {
+                pauseResumeButton.addEventListener('click', togglePauseRecording);
+                
+                // Add glassmorphism hover effects
+                pauseResumeButton.addEventListener('mouseenter', () => {
+                    pauseResumeButton.style.background = 'rgba(14, 116, 184, 0.4)';
+                    pauseResumeButton.style.transform = 'translateY(-2px) scale(1.02)';
+                    pauseResumeButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                });
+                
+                pauseResumeButton.addEventListener('mouseleave', () => {
+                    pauseResumeButton.style.background = 'rgba(14, 116, 184, 0.25)';
+                    pauseResumeButton.style.transform = 'translateY(0) scale(1)';
+                    pauseResumeButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                });
+            }
+            
+            if (stopButton) {
+                // Add glassmorphism hover effects for stop button
+                stopButton.addEventListener('mouseenter', () => {
+                    stopButton.style.background = 'rgba(184, 14, 14, 0.4)';
+                    stopButton.style.transform = 'translateY(-2px) scale(1.02)';
+                    stopButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                });
+                
+                stopButton.addEventListener('mouseleave', () => {
+                    stopButton.style.background = 'rgba(184, 14, 14, 0.25)';
+                    stopButton.style.transform = 'translateY(0) scale(1)';
+                    stopButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                });
+            }
+        }, 100);
     }
 }
 
@@ -429,9 +499,11 @@ onBeforeUnmount(() => {
     webcamSrc.value?.removeEventListener('leavepictureinpicture', handleWebcamPiPLeave);
 });
 
-const containerWebCamStyle = 'background-color: black; border-radius: 0.5rem; display:flex; flex-direction: column; gap: 16px; align-items: center; padding: 8px;';
-const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.5rem; object-fit: cover; border: 2px solid #1f2937;';
-const buttonStopStyle = 'cursor: pointer;margin-bottom: 16px; padding: 5px; background-color: rgb(184, 14, 14); border-radius: 5px; border: none; display:flex; align-items: center; justify-content: center;';
+const containerWebCamStyle = 'background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.95) 50%, rgba(0, 0, 0, 0.9) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 1rem; display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
+const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.75rem; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
+const buttonStopStyle = 'cursor: pointer; padding: 10px 14px; background: rgba(184, 14, 14, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);';
+const buttonPauseStyle = 'cursor: pointer; padding: 10px 14px; background: rgba(14, 116, 184, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);';
+const buttonContainerStyle = 'display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 18px; padding: 8px; border: 1px solid rgba(255, 255, 255, 0.1);';
 
 // Function to get current quality info for display
 const getCurrentQualityInfo = () => {
@@ -562,9 +634,15 @@ const getCurrentQualityInfo = () => {
 <div ref="webcamContainerParent" :class="{ '!hidden': !enableCameraView }" class="z-[100] fixed bottom-10 right-10">
     <div ref="webcamContainer" :style="containerWebCamStyle">
         <video ref="webcamSrc" :style="webcamStyle" autoplay />
-        <button id="stopButton" :style="buttonStopStyle">
-            <StopCircle style="width: 20px; height: 20px; color: white;"></StopCircle>
-        </button>
+        <div :style="buttonContainerStyle">
+            <button v-if="isRecording" id="pauseResumeButton" :style="buttonPauseStyle">
+                <Pause v-if="!isPausedRecord" style="width: 20px; height: 20px; color: white;"></Pause>
+                <Play v-else style="width: 20px; height: 20px; color: white;"></Play>
+            </button>
+            <button id="stopButton" :style="buttonStopStyle">
+                <StopCircle style="width: 20px; height: 20px; color: white;"></StopCircle>
+            </button>
+        </div>
     </div>
 </div>
 </template>
