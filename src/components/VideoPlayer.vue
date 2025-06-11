@@ -223,18 +223,24 @@ async function cutAndDownload() {
         const res = await ffmpeg.writeFile(webmName, dataFile);
         console.log('write:', res);
         const execute = await ffmpeg.exec([
-            '-i',
-            webmName,
             '-ss',
             `${durationCut.start}`,
-            '-to',
-            `${durationCut.end}`,
+            '-i',
+            webmName,
+            '-t',
+            `${durationCut.end - durationCut.start}`,
+            '-map',
+            '0:v',
+            '-map',
+            '0:a',
             '-c:v',
             'copy',
             '-c:a',
             'aac',
-            '-strict',
-            'experimental',
+            '-b:a',
+            '128k',
+            '-avoid_negative_ts',
+            'make_zero',
             cuttedName
         ]);
         console.log('exec:', execute);

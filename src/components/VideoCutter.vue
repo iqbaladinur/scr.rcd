@@ -16,22 +16,23 @@
                 ></span>
             </div>
         </div>
-        <div class="flex justify-between items-center mt-4">
-            <fieldset class="rounded-lg border px-3 py-1.5 w-[200px] text-xs">
-                <legend class="px-1 text-xs font-medium">Duration Cut</legend>
-                <div class="flex justify-between items-center">
-                    <label>Start</label>
-                    <span>{{ (timeStamp.start).toFixed(2) }}</span>
+        <div class="flex justify-between items-center mt-4 gap-4">
+            <div class="flex items-center gap-6 rounded-lg border px-4 py-2 flex-1">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground">Start</span>
+                    <span class="text-sm font-medium">{{ (timeStamp.start).toFixed(2) }}s</span>
                 </div>
-                <div class="flex justify-between items-center text-red-500">
-                    <label>End</label>
-                    <span>{{ (timeStamp.end).toFixed(2) }}</span>
+                <div class="h-4 w-[1px] bg-border"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground">End</span>
+                    <span class="text-sm font-medium text-red-500">{{ (timeStamp.end).toFixed(2) }}s</span>
                 </div>
-                <div class="flex justify-between items-center text-green-500">
-                    <label>Length</label>
-                    <span>{{ (timeStamp.end - timeStamp.start).toFixed(2) }}</span>
+                <div class="h-4 w-[1px] bg-border"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground">Length</span>
+                    <span class="text-sm font-medium text-green-500">{{ (timeStamp.end - timeStamp.start).toFixed(2) }}s</span>
                 </div>
-            </fieldset>
+            </div>
             <slot></slot>
         </div>
     </div>
