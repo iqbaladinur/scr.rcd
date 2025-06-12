@@ -251,7 +251,7 @@ async function cutAndDownload() {
         const dataFile = await fetchFile(props.video.blob);
         const res = await ffmpeg.writeFile(webmName, dataFile);
         console.log('write:', res);
-        const execute = await ffmpeg.exec([
+        const ffmpegArgs = [
             '-ss',
             `${durationCut.start}`,
             '-i',
@@ -260,18 +260,29 @@ async function cutAndDownload() {
             `${durationCut.end - durationCut.start}`,
             '-map',
             '0:v',
-            '-map',
-            '0:a',
+        ];
+
+        // Only add audio mapping if video has audio
+        if (props.video.audio) {
+            ffmpegArgs.push(
+                '-map',
+                '0:a',
+                '-c:a',
+                'aac',
+                '-b:a',
+                '128k'
+            );
+        }
+
+        ffmpegArgs.push(
             '-c:v',
             'copy',
-            '-c:a',
-            'aac',
-            '-b:a',
-            '128k',
             '-avoid_negative_ts',
             'make_zero',
             cuttedName
-        ]);
+        );
+
+        const execute = await ffmpeg.exec(ffmpegArgs);
         console.log('exec:', execute);
         const data = await ffmpeg.readFile(cuttedName);
         const urlDownload = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' }));

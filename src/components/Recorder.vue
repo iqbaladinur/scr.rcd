@@ -161,10 +161,19 @@ const startRecording = async() => {
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
+        let actualRecordingStarted = false;
 
         mediaRecorder.value.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
+            }
+        };
+
+        // Use onstart event to get accurate timing
+        mediaRecorder.value.onstart = () => {
+            if (!actualRecordingStarted) {
+                startTime.value = Date.now();
+                actualRecordingStarted = true;
             }
         };
 
@@ -201,7 +210,6 @@ const startRecording = async() => {
 
         const timeSlice = advancedVideoMode.value ? 100 : 200;
         mediaRecorder.value.start(timeSlice);
-        startTime.value = Date.now();
         isRecording.value = true;
         
         // Add event listener for pause/resume button if PiP window exists
