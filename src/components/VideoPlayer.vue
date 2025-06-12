@@ -10,13 +10,15 @@
                 </fieldset>
             </div>  
             <div class="flex items-center justify-end gap-3">
-                <Button size="sm" @click="downloadFile(false)">
-                    Download as webm
-                </Button>
-                <Button size="sm" @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="gap-2">
+                <button @click="downloadFile(false)" class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(168, 85, 247, 0.3); color: rgb(168, 85, 247);" onmouseenter="this.style.background='rgba(168, 85, 247, 0.25)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(168, 85, 247, 0.2)'" onmouseleave="this.style.background='rgba(168, 85, 247, 0.15)'; this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                    <Download class="size-4"></Download>
+                    <span>Webm</span>
+                </button>
+                <button @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed" style="background: rgba(236, 72, 153, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(236, 72, 153, 0.3); color: rgb(236, 72, 153);" onmouseenter="if(!this.disabled) { this.style.background='rgba(236, 72, 153, 0.25)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(236, 72, 153, 0.2)' }" onmouseleave="if(!this.disabled) { this.style.background='rgba(236, 72, 153, 0.15)'; this.style.transform='scale(1)'; this.style.boxShadow='none' }">
                     <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Download as mp4' }}
-                </Button>
+                    <Download v-else class="size-4"></Download>
+                    <span>{{ loading.loadingScript ? 'Loading...' : 'Mp4' }}</span>
+                </button>
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
@@ -54,10 +56,13 @@
                 class="mt-4"
                 @resize="handleSeek"
             >
-                <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2">
-                    <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                    {{ loading.loadingScript ? 'Loading ffmpeglib' : 'Trim and Download' }}
-                </Button>
+                <div class="flex-1 flex items-center justify-end">
+                    <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2" style="background: rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(168, 85, 247, 0.3); color: rgb(168, 85, 247);">
+                        <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
+                        <Scissors v-else class="size-4"></Scissors>
+                        {{ loading.loadingScript ? 'Getting ready' : 'Trim' }}
+                    </Button>
+                </div>
             </VideoCutter>
             <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
                 <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
@@ -101,7 +106,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Loader, Rabbit, AudioLines, ArrowBigDownDash } from "lucide-vue-next";
+import { Loader, Rabbit, AudioLines, ArrowBigDownDash, Download, Scissors } from "lucide-vue-next";
 import { useIsMobile } from '@/composables/isMobileStore';
 import VideoCutter from "@/components/VideoCutter.vue";
 

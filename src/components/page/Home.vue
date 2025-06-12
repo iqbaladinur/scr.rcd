@@ -65,7 +65,7 @@ function toggleColorMode() {
                 <Recorder v-if="!isMobile" />
 
                 <!-- output -->
-                <div class="relative flex h-full min-h-[50vh] flex-col rounded-lg border p-4 flex-1" :class="{ 'w-full !rounded-md !bg-muted/0': isMobile }">
+                <div class="relative flex h-full min-h-[50vh] flex-col rounded-lg border p-4 flex-1" :class="{ 'w-full !rounded-md !bg-muted/0': isMobile }" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
                     <VideoPlayer :video="video" />
                 </div>
                 <Drawer v-if="isMobile">

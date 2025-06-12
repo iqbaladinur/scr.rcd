@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="flex justify-between items-center mt-4 gap-4">
-            <div class="flex items-center gap-6 rounded-lg border px-4 py-2 flex-1">
+            <div class="flex items-center gap-6 rounded-lg border px-4 py-2">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-medium text-muted-foreground">Start</span>
                     <span class="text-sm font-medium">{{ (timeStamp.start).toFixed(2) }}s</span>

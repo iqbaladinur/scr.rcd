@@ -544,92 +544,122 @@ const getCurrentQualityInfo = () => {
 
 </script>
 <template>
-<div class="relative flex-col items-start gap-8 md:flex md:w-[310px]" :class="{ 'hidden': !mobile }">
+<div class="relative flex-col items-start gap-8 md:flex md:w-[350px]" :class="{ 'hidden': !mobile }">
     <div class="flex flex-col w-full items-start gap-6">
         <!-- Quality Info Display -->
-        <div class="w-full p-3 bg-muted/50 rounded-lg border">
-            <h4 class="text-sm font-medium mb-2">Current Recording Quality</h4>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                    <span class="text-muted-foreground">Resolution:</span>
-                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().resolution }}</span>
+        <div class="w-full p-3 relative overflow-hidden" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+            <!-- Decorative gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+            
+            <div class="relative">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 animate-pulse"></div>
+                    <h4 class="text-sm font-medium bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
+                        Current Recording Quality
+                    </h4>
                 </div>
-                <div>
-                    <span class="text-muted-foreground">FPS:</span>
-                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().fps }}</span>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <span class="text-muted-foreground/80">Resolution</span>
+                        <span class="font-medium text-foreground/90 text-xs">{{ getCurrentQualityInfo().resolution }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <span class="text-muted-foreground/80">FPS</span>
+                        <span class="font-medium text-foreground/90 text-xs">{{ getCurrentQualityInfo().fps }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <span class="text-muted-foreground/80">Bitrate</span>
+                        <span class="font-medium text-foreground/90 text-xs">{{ getCurrentQualityInfo().bitrate }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <span class="text-muted-foreground/80">Codec</span>
+                        <span class="font-medium text-foreground/90 text-xs">{{ getCurrentQualityInfo().codec }}</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-muted-foreground">Bitrate:</span>
-                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().bitrate }}</span>
+                
+                <div class="mt-2 flex items-center justify-between p-2 rounded-lg text-xs" style="background: rgba(66, 133, 244, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.15);">
+                    <span class="text-muted-foreground/80">Mode</span>
+                    <span class="font-medium text-blue-600 dark:text-blue-400">{{ getCurrentQualityInfo().mode }}</span>
                 </div>
-                <div>
-                    <span class="text-muted-foreground">Codec:</span>
-                    <span class="ml-1 font-medium">{{ getCurrentQualityInfo().codec }}</span>
-                </div>
-            </div>
-            <div class="mt-2 text-xs">
-                <span class="text-muted-foreground">Mode:</span>
-                <span class="ml-1 font-medium">{{ getCurrentQualityInfo().mode }}</span>
             </div>
         </div>
 
-        <div class="w-full grid gap-2">
-            <template v-if="!isRecording">
-                <template v-if="!mobile">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Button @click="startRecording()" class="rounded-lg">
-                                    <Play class="size-5 mr-4 fill-white dark:fill-black"></Play>
-                                    Start Recording Screen Only
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" :side-offset="5" :class="{ 'hidden': mobile }">
-                                Audio only available on chrome tab.
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <Button @click="startRecordingWithAudioMic()" class="rounded-lg">
-                        <Mic class="size-5 mr-4"></Mic>
-                        Start Recording with Mic
-                    </Button>
-                </template>
-                <Button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="rounded-lg">
-                    <Mic class="size-5 mr-4"></Mic>
-                    Start Recording audio
-                </Button>
-            </template>
-            <template v-if="isRecording">
-                <Button @click="stopRecording()" variant="destructive" :class="{ 'animate-pulse': !isPausedRecord }">
-                    <StopCircle class="size-5 mr-4"></StopCircle>
-                    Stop Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
-                </Button>
-                <Button v-if="!mobile" @click="togglePauseRecording()">
-                    <Pause v-if="!isPausedRecord" class="size-5 mr-4"></Pause>
-                    <Play v-else class="size-5 mr-4"></Play>
-                    {{ isPausedRecord ? 'Resume' : 'Pause' }} Recording {{ recordedType === 'scr_mic' ? 'with Mic' : 'Screen' }}
-                </Button>
-            </template>
-            <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
-                <label for="enable-camera" class="text-sm">
-                    <span v-if="disableCameraView">Camera Not Found</span>
-                    <TooltipProvider v-else>
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <span>Enable Camera View</span>
-                            </TooltipTrigger>
-                            <TooltipContent side="right" :side-offset="10" :class="{ 'hidden': mobile }">
-                                Camera view only recorded if <br> you select entire screen capture.
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </label>
+        <div class="w-full space-y-4">
+            <!-- Recording Controls -->
+            <div class="p-3 relative overflow-hidden" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
+                <!-- Decorative gradient -->
+                <div class="absolute inset-0 bg-gradient-to-r from-red-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
+                
+                <div class="relative">
+                    <template v-if="!isRecording">
+                        <template v-if="!mobile">
+                            <div class="flex gap-2">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <button @click="startRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.2); color: rgb(66, 133, 244);" onmouseenter="this.style.background='rgba(66, 133, 244, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(66, 133, 244, 0.12)'; this.style.transform='scale(1)'">
+                                                <Play class="size-4"></Play>
+                                                <span>Screen</span>
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" :side-offset="5">
+                                            Record screen with system audio
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <button @click="startRecordingWithAudioMic()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(234, 67, 53, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.2); color: rgb(234, 67, 53);" onmouseenter="this.style.background='rgba(234, 67, 53, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(234, 67, 53, 0.12)'; this.style.transform='scale(1)'">
+                                    <Mic class="size-4"></Mic>
+                                    <span>+ Mic</span>
+                                </button>
+                            </div>
+                        </template>
+                        <button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(234, 67, 53, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.2); color: rgb(234, 67, 53);">
+                            <Mic class="size-4"></Mic>
+                            <span>Record Audio</span>
+                        </button>
+                    </template>
+                    
+                    <template v-if="isRecording">
+                        <div class="flex gap-2">
+                            <button @click="stopRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-[1000ms]" :class="{ 'animate-pulse': !isPausedRecord }" style="background: rgba(234, 67, 53, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.3); color: rgb(234, 67, 53);" onmouseenter="this.style.background='rgba(234, 67, 53, 0.25)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(234, 67, 53, 0.15)'; this.style.transform='scale(1)'">
+                                <StopCircle class="size-4"></StopCircle>
+                                <span>Stop</span>
+                            </button>
+                            <button v-if="!mobile" @click="togglePauseRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.2); color: rgb(66, 133, 244);" onmouseenter="this.style.background='rgba(66, 133, 244, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(66, 133, 244, 0.12)'; this.style.transform='scale(1)'">
+                                <Pause v-if="!isPausedRecord" class="size-4"></Pause>
+                                <Play v-else class="size-4"></Play>
+                                <span>{{ isPausedRecord ? 'Resume' : 'Pause' }}</span>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Camera Toggle -->
+            <div class="flex items-center gap-3 justify-between p-3 rounded-lg" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full" :class="enableCameraView ? 'bg-green-500' : 'bg-gray-400'"></div>
+                    <label for="enable-camera" class="text-sm font-medium">
+                        <span v-if="disableCameraView" class="text-muted-foreground">No Camera</span>
+                        <TooltipProvider v-else>
+                            <Tooltip>
+                                <TooltipTrigger as-child>
+                                    <span>Camera View</span>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" :side-offset="10" :class="{ 'hidden': mobile }">
+                                    Picture-in-Picture camera overlay
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </label>
+                </div>
                 <Switch v-model:checked="enableCameraView" id="enable-camera" :disabled="disableCameraView" @update:checked="toggleWebCamp" />
             </div>
         </div>
-        <fieldset class="rounded-lg border p-4 w-full">
+        <fieldset class="rounded-lg border p-4 w-full" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
             <legend class="-ml-1 px-1 text-sm font-medium">Recorded Videos</legend>
-            <ul class="overflow-y-auto space-y-1" :style="{ height: 'calc(100vh - 446px)' }">
+            <ul class="overflow-y-auto space-y-1" :style="{ height: 'calc(100vh - 492px)' }">
                 <li
                     v-for="video in recordedVideos"
                     class="flex mb-1 items-start hover:bg-slate-100 dark:hover:bg-slate-100/10 py-3 px-3 rounded-md cursor-pointer gap-3 border"
