@@ -65,9 +65,33 @@
             </Button>
         </div>
     </div>
-    <div v-else class="flex-1 flex items-center justify-center flex-col gap-2">
-        <Rabbit class="size-16"></Rabbit>
-        Nothing to display...
+    <div v-else class="flex-1 flex items-center justify-center flex-col gap-6 p-8">
+        <div class="relative">
+            <!-- Animated background circle -->
+            <div class="absolute inset-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-xl animate-pulse"></div>
+            <div class="relative w-24 h-24 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <Rabbit class="size-12 text-blue-400/80"></Rabbit>
+            </div>
+        </div>
+        
+        <div class="text-center space-y-3 max-w-md">
+            <h3 class="text-xl font-semibold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
+                Ready for Action! 🎬
+            </h3>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+                Your video playground is all set up and waiting. Pick any recording from the sidebar to start watching, editing, or downloading.
+            </p>
+            <p class="text-xs text-muted-foreground/70 italic">
+                Pro tip: Press spacebar to play/pause videos when they're loaded ✨
+            </p>
+        </div>
+        
+        <!-- Decorative elements -->
+        <div class="flex items-center gap-4 opacity-30">
+            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+            <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+            <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        </div>
     </div>
 </template>
 <script setup lang="ts">

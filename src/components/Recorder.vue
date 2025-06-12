@@ -309,6 +309,11 @@ async function startWebcam() {
                         stopButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
                     });
                 }
+                
+                // If recording is active, add event listeners for recording controls
+                if (isRecording.value) {
+                    addPauseResumeEventListener();
+                }
             }
         } catch (error: any) {
             toast({
@@ -321,72 +326,64 @@ async function startWebcam() {
 }
 
 function addPauseResumeEventListener() {
-    if (PIPWINDOW.value) {
-        // Remove existing event listener first to avoid duplicates
-        const existingButton = PIPWINDOW.value.document.querySelector('#pauseResumeButton');
-        if (existingButton) {
-            existingButton.removeEventListener('click', togglePauseRecording);
-        }
-        
-        const existingButtonStop = PIPWINDOW.value.document.querySelector('#stopRecordButton');
-        if (existingButtonStop) {
-            existingButtonStop.removeEventListener('click', stopRecording);
-        }
-        
-        // Add event stopRecording with a small delay to ensure button is rendered
-        setTimeout(() => {
-            const pauseResumeButton = PIPWINDOW.value?.document.querySelector('#pauseResumeButton');
-            const stopButton = PIPWINDOW.value?.document.querySelector('#stopButton');
-            const stopButtonRecording = PIPWINDOW.value?.document.querySelector('#stopRecordButton');
-            
-            if (pauseResumeButton) {
-                pauseResumeButton.addEventListener('click', togglePauseRecording);
-                
-                // Add Material Design hover effects
-                pauseResumeButton.addEventListener('mouseenter', () => {
-                    pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.2)';
-                    pauseResumeButton.style.transform = 'scale(1.04)';
-                    pauseResumeButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(66, 133, 244, 0.15)';
-                });
-                
-                pauseResumeButton.addEventListener('mouseleave', () => {
-                    pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.12)';
-                    pauseResumeButton.style.transform = 'scale(1)';
-                    pauseResumeButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
-                });
-            }
+    if (!PIPWINDOW.value) {
+        return;
+    }
 
-            if (stopButtonRecording) {
-                stopButtonRecording.addEventListener('click', stopRecording);
-                stopButtonRecording.addEventListener('mouseenter', () => {
-                    stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.2)';
-                    stopButtonRecording.style.transform = 'scale(1.04)';
-                    stopButtonRecording.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(234, 67, 53, 0.15)';
-                });
-                
-                stopButtonRecording.addEventListener('mouseleave', () => {
-                    stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.12)';
-                    stopButtonRecording.style.transform = 'scale(1)';
-                    stopButtonRecording.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
-                });
-            }
+    const addEventListenersToButtons = () => {
+        const pauseResumeButton = PIPWINDOW.value?.document.querySelector('#pauseResumeButton');
+        const stopButtonRecording = PIPWINDOW.value?.document.querySelector('#stopRecordButton');
+        
+        if (pauseResumeButton) {
+            // Remove existing listeners first
+            pauseResumeButton.removeEventListener('click', togglePauseRecording);
             
-            if (stopButton) {
-                // Add Material Design hover effects for stop button (webcam close)
-                stopButton.addEventListener('mouseenter', () => {
-                    stopButton.style.background = 'rgba(95, 99, 104, 0.2)';
-                    stopButton.style.transform = 'scale(1.04)';
-                    stopButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(95, 99, 104, 0.15)';
-                });
-                
-                stopButton.addEventListener('mouseleave', () => {
-                    stopButton.style.background = 'rgba(95, 99, 104, 0.12)';
-                    stopButton.style.transform = 'scale(1)';
-                    stopButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
-                });
-            }
+            // Add click listener
+            pauseResumeButton.addEventListener('click', togglePauseRecording);
+            
+            // Add Material Design hover effects
+            pauseResumeButton.addEventListener('mouseenter', () => {
+                pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.2)';
+                pauseResumeButton.style.transform = 'scale(1.04)';
+                pauseResumeButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(66, 133, 244, 0.15)';
+            });
+            
+            pauseResumeButton.addEventListener('mouseleave', () => {
+                pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.12)';
+                pauseResumeButton.style.transform = 'scale(1)';
+                pauseResumeButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
+            });
+        }
 
-        }, 100);
+        if (stopButtonRecording) {
+            // Remove existing listeners first
+            stopButtonRecording.removeEventListener('click', stopRecording);
+            
+            // Add click listener
+            stopButtonRecording.addEventListener('click', stopRecording);
+            
+            // Add hover effects
+            stopButtonRecording.addEventListener('mouseenter', () => {
+                stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.2)';
+                stopButtonRecording.style.transform = 'scale(1.04)';
+                stopButtonRecording.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(234, 67, 53, 0.15)';
+            });
+            
+            stopButtonRecording.addEventListener('mouseleave', () => {
+                stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.12)';
+                stopButtonRecording.style.transform = 'scale(1)';
+                stopButtonRecording.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
+            });
+        }
+    };
+
+    // Try to add listeners immediately
+    addEventListenersToButtons();
+    
+    // If buttons not found, retry with a small delay
+    if (!PIPWINDOW.value.document.querySelector('#pauseResumeButton') || 
+        !PIPWINDOW.value.document.querySelector('#stopRecordButton')) {
+        setTimeout(addEventListenersToButtons, 50);
     }
 }
 
