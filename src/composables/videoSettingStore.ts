@@ -21,7 +21,7 @@ const advancedVideoMode = ref<boolean>(getValueStored(keyAdvancedMode));
 // Video constraints configurations
 export const getVideoConstraints = (mode: VideoQualityMode, force60fps: boolean = false) => {
     const baseConstraints = {
-        frameRate: force60fps ? { ideal: 60, max: 60 } : { ideal: 30, min: 24, max: 60 },
+        frameRate: force60fps ? { ideal: 60, max: 60 } : { ideal: 30, max: 60 },
     };
 
     switch (mode) {
