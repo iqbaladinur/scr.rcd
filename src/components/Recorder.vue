@@ -110,17 +110,51 @@ const startRecordingWithAudioMic = async () => {
 
         mediaRecorder.value.onstop = async() => {
             isRecording.value = false;
-            if (isPausedRecord.value) {
+            
+            // Properly handle paused state when stopping
+            if (isPausedRecord.value && pausedStart) {
                 pausedDurations.push(Date.now() - pausedStart);
                 isPausedRecord.value = false;
             }
-            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            const tracks = stream.getTracks();
-            tracks.forEach((tr) => tr.stop());
-            stopWebCam();
-            const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
-            const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
-            saveToIndexedDB(blobWithDuration, true);
+            
+            // Ensure we have recorded data
+            if (recordedChunks.length === 0) {
+                toast({
+                    title: 'Recording Error',
+                    description: 'No data was recorded',
+                    variant: 'destructive'
+                });
+                return;
+            }
+            
+            try {
+                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                const tracks = stream.getTracks();
+                tracks.forEach((tr) => tr.stop());
+                stopWebCam();
+                
+                const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
+                
+                // Only apply duration fix if duration is valid
+                let finalBlob = recordedBlob;
+                if (duration > 0) {
+                    try {
+                        finalBlob = await fixWebmDuration(recordedBlob, duration, { logger: false });
+                    } catch (durationError) {
+                        console.warn('Duration fix failed, using original blob:', durationError);
+                        finalBlob = recordedBlob;
+                    }
+                }
+                
+                saveToIndexedDB(finalBlob, true);
+            } catch (error: any) {
+                console.error('Error processing recording:', error);
+                toast({
+                    title: 'Recording Error',
+                    description: 'Failed to process recording data',
+                    variant: 'destructive'
+                });
+            }
         };
 
         mediaRecorder.value.onpause = () => {
@@ -129,9 +163,23 @@ const startRecordingWithAudioMic = async () => {
         }
 
         mediaRecorder.value.onresume = () => {
-            pausedDurations.push(Date.now() - pausedStart);
+            if (pausedStart) {
+                pausedDurations.push(Date.now() - pausedStart);
+            }
             isPausedRecord.value = false;
+            pausedStart = Date.now(); // Reset for potential next pause
         }
+
+        mediaRecorder.value.onerror = (event: any) => {
+            console.error('MediaRecorder error:', event);
+            isRecording.value = false;
+            isPausedRecord.value = false;
+            toast({
+                title: 'Recording Error',
+                description: 'MediaRecorder encountered an error',
+                variant: 'destructive'
+            });
+        };
 
         const timeSlice = advancedVideoMode.value ? 100 : 200;
         mediaRecorder.value.start(timeSlice);
@@ -179,23 +227,57 @@ const startRecording = async() => {
 
         mediaRecorder.value.onstop = async () => {
             isRecording.value = false;
-            if (isPausedRecord.value) {
+            
+            // Properly handle paused state when stopping
+            if (isPausedRecord.value && pausedStart) {
                 pausedDurations.push(Date.now() - pausedStart);
                 isPausedRecord.value = false;
             }
-            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            const tracks = stream.getTracks();
-            let audioEnable = false;
-            tracks.forEach((tr) => {
-                if (tr.kind === 'audio') {
-                    audioEnable = true;
-                };
-                tr.stop();
-            });
-            const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
-            const blobWithDuration = await fixWebmDuration(recordedBlob, duration, { logger: false });
-            stopWebCam();
-            saveToIndexedDB(blobWithDuration, audioEnable);
+            
+            // Ensure we have recorded data
+            if (recordedChunks.length === 0) {
+                toast({
+                    title: 'Recording Error',
+                    description: 'No data was recorded',
+                    variant: 'destructive'
+                });
+                return;
+            }
+            
+            try {
+                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                const tracks = stream.getTracks();
+                let audioEnable = false;
+                tracks.forEach((tr) => {
+                    if (tr.kind === 'audio') {
+                        audioEnable = true;
+                    };
+                    tr.stop();
+                });
+                
+                const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
+                
+                // Only apply duration fix if duration is valid
+                let finalBlob = recordedBlob;
+                if (duration > 0) {
+                    try {
+                        finalBlob = await fixWebmDuration(recordedBlob, duration, { logger: false });
+                    } catch (durationError) {
+                        console.warn('Duration fix failed, using original blob:', durationError);
+                        finalBlob = recordedBlob;
+                    }
+                }
+                
+                stopWebCam();
+                saveToIndexedDB(finalBlob, audioEnable);
+            } catch (error: any) {
+                console.error('Error processing recording:', error);
+                toast({
+                    title: 'Recording Error',
+                    description: 'Failed to process recording data',
+                    variant: 'destructive'
+                });
+            }
         };
 
         mediaRecorder.value.onpause = () => {
@@ -204,9 +286,23 @@ const startRecording = async() => {
         }
 
         mediaRecorder.value.onresume = () => {
-            pausedDurations.push(Date.now() - pausedStart);
+            if (pausedStart) {
+                pausedDurations.push(Date.now() - pausedStart);
+            }
             isPausedRecord.value = false;
+            pausedStart = Date.now(); // Reset for potential next pause
         }
+
+        mediaRecorder.value.onerror = (event: any) => {
+            console.error('MediaRecorder error:', event);
+            isRecording.value = false;
+            isPausedRecord.value = false;
+            toast({
+                title: 'Recording Error',
+                description: 'MediaRecorder encountered an error',
+                variant: 'destructive'
+            });
+        };
 
         const timeSlice = advancedVideoMode.value ? 100 : 200;
         mediaRecorder.value.start(timeSlice);
@@ -455,23 +551,41 @@ const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => {
 };
 
 const stopRecording = () => {
-    if (mediaRecorder.value) {
-        mediaRecorder.value?.stop();
+    if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+        // If recording is paused, resume it first to ensure clean stop
+        if (mediaRecorder.value.state === 'paused') {
+            mediaRecorder.value.resume();
+            // Small delay to ensure state change is processed
+            setTimeout(() => {
+                if (mediaRecorder.value && mediaRecorder.value.state === 'recording') {
+                    mediaRecorder.value.stop();
+                }
+            }, 50);
+        } else {
+            mediaRecorder.value.stop();
+        }
     }
 }
 
 const togglePauseRecording = () => {
-    if (!mediaRecorder.value) {
-        return
-    }
-
-    if(isPausedRecord.value) {
-        mediaRecorder.value.resume();
+    if (!mediaRecorder.value || mediaRecorder.value.state === 'inactive') {
         return;
     }
-    
-    mediaRecorder.value.pause();
 
+    try {
+        if (isPausedRecord.value && mediaRecorder.value.state === 'paused') {
+            mediaRecorder.value.resume();
+        } else if (!isPausedRecord.value && mediaRecorder.value.state === 'recording') {
+            mediaRecorder.value.pause();
+        }
+    } catch (error: any) {
+        console.error('Error toggling pause/resume:', error);
+        toast({
+            title: 'Recording Error',
+            description: 'Failed to pause/resume recording',
+            variant: 'destructive'
+        });
+    }
 }
 
 const getRecordedVideosFromIndexedDB = async(id?: number) => {
