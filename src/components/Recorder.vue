@@ -3,7 +3,7 @@ import { db } from '@/db/db';
 import { Button } from "@/components/ui/button";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Play, StopCircle, Trash, Mic, Pause } from "lucide-vue-next";
+import { Play, StopCircle, Trash, Mic, Pause, X } from "lucide-vue-next";
 import { useVideo } from '@/composables/videoStore';
 import { Switch } from "@/components/ui/switch";
 import {
@@ -295,18 +295,18 @@ async function startWebcam() {
                     stopWebCam();
                 });
                 
-                // Add glassmorphism hover effects for stop button
+                // Add Material Design hover effects for stop button (webcam close)
                 if (stopButton) {
                     stopButton.addEventListener('mouseenter', () => {
-                        stopButton.style.background = 'rgba(184, 14, 14, 0.4)';
-                        stopButton.style.transform = 'translateY(-2px) scale(1.02)';
-                        stopButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                        stopButton.style.background = 'rgba(95, 99, 104, 0.2)';
+                        stopButton.style.transform = 'scale(1.04)';
+                        stopButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(95, 99, 104, 0.15)';
                     });
                     
                     stopButton.addEventListener('mouseleave', () => {
-                        stopButton.style.background = 'rgba(184, 14, 14, 0.25)';
-                        stopButton.style.transform = 'translateY(0) scale(1)';
-                        stopButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                        stopButton.style.background = 'rgba(95, 99, 104, 0.12)';
+                        stopButton.style.transform = 'scale(1)';
+                        stopButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
                     });
                 }
             }
@@ -328,42 +328,64 @@ function addPauseResumeEventListener() {
             existingButton.removeEventListener('click', togglePauseRecording);
         }
         
-        // Add event listener with a small delay to ensure button is rendered
+        const existingButtonStop = PIPWINDOW.value.document.querySelector('#stopRecordButton');
+        if (existingButtonStop) {
+            existingButtonStop.removeEventListener('click', stopRecording);
+        }
+        
+        // Add event stopRecording with a small delay to ensure button is rendered
         setTimeout(() => {
             const pauseResumeButton = PIPWINDOW.value?.document.querySelector('#pauseResumeButton');
             const stopButton = PIPWINDOW.value?.document.querySelector('#stopButton');
+            const stopButtonRecording = PIPWINDOW.value?.document.querySelector('#stopRecordButton');
             
             if (pauseResumeButton) {
                 pauseResumeButton.addEventListener('click', togglePauseRecording);
                 
-                // Add glassmorphism hover effects
+                // Add Material Design hover effects
                 pauseResumeButton.addEventListener('mouseenter', () => {
-                    pauseResumeButton.style.background = 'rgba(14, 116, 184, 0.4)';
-                    pauseResumeButton.style.transform = 'translateY(-2px) scale(1.02)';
-                    pauseResumeButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                    pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.2)';
+                    pauseResumeButton.style.transform = 'scale(1.04)';
+                    pauseResumeButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(66, 133, 244, 0.15)';
                 });
                 
                 pauseResumeButton.addEventListener('mouseleave', () => {
-                    pauseResumeButton.style.background = 'rgba(14, 116, 184, 0.25)';
-                    pauseResumeButton.style.transform = 'translateY(0) scale(1)';
-                    pauseResumeButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                    pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.12)';
+                    pauseResumeButton.style.transform = 'scale(1)';
+                    pauseResumeButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
+                });
+            }
+
+            if (stopButtonRecording) {
+                stopButtonRecording.addEventListener('click', stopRecording);
+                stopButtonRecording.addEventListener('mouseenter', () => {
+                    stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.2)';
+                    stopButtonRecording.style.transform = 'scale(1.04)';
+                    stopButtonRecording.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(234, 67, 53, 0.15)';
+                });
+                
+                stopButtonRecording.addEventListener('mouseleave', () => {
+                    stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.12)';
+                    stopButtonRecording.style.transform = 'scale(1)';
+                    stopButtonRecording.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
                 });
             }
             
             if (stopButton) {
-                // Add glassmorphism hover effects for stop button
+                // Add Material Design hover effects for stop button (webcam close)
                 stopButton.addEventListener('mouseenter', () => {
-                    stopButton.style.background = 'rgba(184, 14, 14, 0.4)';
-                    stopButton.style.transform = 'translateY(-2px) scale(1.02)';
-                    stopButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                    stopButton.style.background = 'rgba(95, 99, 104, 0.2)';
+                    stopButton.style.transform = 'scale(1.04)';
+                    stopButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(95, 99, 104, 0.15)';
                 });
                 
                 stopButton.addEventListener('mouseleave', () => {
-                    stopButton.style.background = 'rgba(184, 14, 14, 0.25)';
-                    stopButton.style.transform = 'translateY(0) scale(1)';
-                    stopButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                    stopButton.style.background = 'rgba(95, 99, 104, 0.12)';
+                    stopButton.style.transform = 'scale(1)';
+                    stopButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
                 });
             }
+
         }, 100);
     }
 }
@@ -501,9 +523,10 @@ onBeforeUnmount(() => {
 
 const containerWebCamStyle = 'background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.95) 50%, rgba(0, 0, 0, 0.9) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 1rem; display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
 const webcamStyle = 'width: 300px; height: 200px; border-radius: 0.75rem; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
-const buttonStopStyle = 'cursor: pointer; padding: 10px 14px; background: rgba(184, 14, 14, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);';
-const buttonPauseStyle = 'cursor: pointer; padding: 10px 14px; background: rgba(14, 116, 184, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);';
-const buttonContainerStyle = 'display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 18px; padding: 8px; border: 1px solid rgba(255, 255, 255, 0.1);';
+const buttonStopStyle = 'cursor: pointer; padding: 6px 8px; background: rgba(234, 67, 53, 0.12); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1); min-width: 32px; min-height: 32px;';
+const buttonStopWebcamStyle = 'cursor: pointer; padding: 6px 8px; background: rgba(95, 99, 104, 0.12); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1); min-width: 32px; min-height: 32px;';
+const buttonPauseStyle = 'cursor: pointer; padding: 6px 8px; background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1); min-width: 32px; min-height: 32px;';
+const buttonContainerStyle = 'display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%); border-radius: 12px; padding: 4px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);';
 
 // Function to get current quality info for display
 const getCurrentQualityInfo = () => {
@@ -635,12 +658,15 @@ const getCurrentQualityInfo = () => {
     <div ref="webcamContainer" :style="containerWebCamStyle">
         <video ref="webcamSrc" :style="webcamStyle" autoplay />
         <div :style="buttonContainerStyle">
-            <button v-if="isRecording" id="pauseResumeButton" :style="buttonPauseStyle">
-                <Pause v-if="!isPausedRecord" style="width: 20px; height: 20px; color: white;"></Pause>
-                <Play v-else style="width: 20px; height: 20px; color: white;"></Play>
+            <button v-if="isRecording" id="pauseResumeButton" :style="buttonPauseStyle" :title="isPausedRecord ? 'Resume Recording' : 'Pause Recording'">
+                <Pause v-if="!isPausedRecord" style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Pause>
+                <Play v-else style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Play>
             </button>
-            <button id="stopButton" :style="buttonStopStyle">
-                <StopCircle style="width: 20px; height: 20px; color: white;"></StopCircle>
+            <button v-if="isRecording" id="stopRecordButton" :style="buttonStopStyle" title="Stop Recording">
+                <StopCircle style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></StopCircle>
+            </button>
+            <button id="stopButton" :style="buttonStopWebcamStyle" title="Close Webcam">
+                <X style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></X>
             </button>
         </div>
     </div>
