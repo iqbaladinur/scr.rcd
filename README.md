@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://scr-rcd.cloud/logo-tone.png" alt="scr.rcd logo">
+  <img src="https://raw.githubusercontent.com/iqbaladinur/scr.rcd/master/public/logo-tone.png" alt="scr.rcd logo">
 </p>
 
 #
@@ -15,7 +15,15 @@ SCR.RCD is a web-based screen recording application that allows users to record 
 - [x] **Simple Interface:** The user interface is intuitive and easy to use, making screen recording accessible to everyone.
 - [x] **CameraView:** Enable camera view (currently using [PiP](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API), only recorded if the user select capture entire screen).
 - [x] **Video Cutter:** Added ability to trim video in mp4 format. 
-- [x] **Customizable Settings:** Customize recording settings such as frame rate, resolution, and audio options (partially added).
+- [x] **Customizable Settings:** Customize recording settings such as frame rate, resolution, and audio options.
+- [x] **Multi-Resolution Support:** Choose from various resolutions including Auto, HD (720p), Full HD (1080p), 2K, 4K, and Maximum.
+- [x] **Advanced Bitrate Control:** Select between Auto, High Quality (8 Mbps video + 256 Kbps audio), and Ultra Quality (15 Mbps video + 320 Kbps audio).
+- [x] **Codec Optimization:** Support for VP9, VP8, and H.264 with auto-detection of the best supported codec.
+- [x] **Advanced Video Mode:** Enhanced video constraints with aspect ratio optimization and improved recording quality.
+- [x] **Auto-Optimization:** Smart device capability detection and automatic application of optimal settings.
+- [x] **Enhanced Audio Quality:** CD quality audio (44.1 kHz) with improved bitrate and echo cancellation.
+- [x] **Quality Information Display:** Real-time display of active recording quality settings.
+- [x] **Playback Speed Control:** Adjust video playback rates in both VideoCutter and VideoPlayer components.
 - [ ] whats next ...?
 
 ## Development
