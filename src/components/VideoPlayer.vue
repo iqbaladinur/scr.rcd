@@ -22,30 +22,69 @@
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
-            <div class="p-4 rounded-lg flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
-                <video
-                    v-if="!isMobile"
-                    id="videoPlayer"
-                    ref="videoPlayerRef"
-                    controls
-                    :src="videoUrl"
-                    class="rounded-lg"
-                    :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
-                    @loadedmetadata="handleMetaData"
-                    @timeupdate="handleVideoPlayback"
-                    @playing="isVideoPlaying = true"
-                    @pause="isVideoPlaying = false"
-                >
-                    Your browser does not support the video tag.
-                </video>
-                <div v-else class="w-full flex flex-col items-center gap-2 p-2">
-                    <div class="w-full h-[200px] bg-black/50 rounded flex items-center justify-center">
-                        <AudioLines class="size-20"></AudioLines>
+            <div class="flex gap-4">
+                <div class="flex-1 p-4 rounded-lg flex items-start justify-center" :class="{ 'border': !isMobile, 'flex-1 bg-blue-400': isMobile }">
+                    <video
+                        v-if="!isMobile"
+                        id="videoPlayer"
+                        ref="videoPlayerRef"
+                        controls
+                        :src="videoUrl"
+                        class="rounded-lg"
+                        :class="{ 'vertical-video': isVertical, 'horizontal-video': !isVertical }"
+                        @loadedmetadata="handleMetaData"
+                        @timeupdate="handleVideoPlayback"
+                        @playing="isVideoPlaying = true"
+                        @pause="isVideoPlaying = false"
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                    <div v-else class="w-full flex flex-col items-center gap-2 p-2">
+                        <div class="w-full h-[200px] bg-black/50 rounded flex items-center justify-center">
+                            <AudioLines class="size-20"></AudioLines>
+                        </div>
+                        <p class="w-full text-center">{{ video.name }}</p>
+                        <audio ref="audioPlayer" controls :src="videoUrl" class="w-full mt-10">
+                            Your browser does not support the audio tag.
+                        </audio>
                     </div>
-                    <p class="w-full text-center">{{ video.name }}</p>
-                    <audio ref="audioPlayer" controls :src="videoUrl" class="w-full mt-10">
-                        Your browser does not support the audio tag.
-                    </audio>
+                </div>
+                
+                <!-- Video Metadata Sidebar -->
+                <div v-if="!isMobile" class="w-80 p-4 rounded-lg" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
+                    <div class="relative">
+                        <!-- Decorative gradient -->
+                        
+                        <h3 class="text-lg font-semibold mb-4 relative dark:text-white text-black">
+                            Video Information
+                        </h3>
+                        <div class="grid grid-cols-1 gap-2 relative">
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Name</span>
+                                <span class="font-medium text-foreground/90 text-xs truncate ml-2">{{ video.name }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Duration</span>
+                                <span class="font-medium text-foreground/90 text-xs">{{ formatDuration(videoDuration) }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Dimensions</span>
+                                <span class="font-medium text-foreground/90 text-xs">{{ videoDimensions }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Format</span>
+                                <span class="font-medium text-foreground/90 text-xs">{{ videoFormat }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Size</span>
+                                <span class="font-medium text-foreground/90 text-xs">{{ formatFileSize(videoSize) }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span class="text-muted-foreground/80 text-xs">Audio</span>
+                                <span class="font-medium text-foreground/90 text-xs">{{ video.audio ? 'Yes' : 'No' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <VideoCutter
@@ -55,12 +94,13 @@
                 :audio-url="videoUrl"
                 class="mt-4"
                 @resize="handleSeek"
+                @speed-change="handleSpeedChange"
             >
                 <div class="flex-1 flex items-center justify-end">
                     <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2" style="background: rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(168, 85, 247, 0.3); color: rgb(168, 85, 247);">
                         <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
-                        <Scissors v-else class="size-4"></Scissors>
-                        {{ loading.loadingScript ? 'Getting ready' : 'Trim' }}
+                        <Download v-else class="size-4"></Download>
+                        {{ loading.loadingScript ? 'Getting ready' : 'Export' }}
                     </Button>
                 </div>
             </VideoCutter>
@@ -106,7 +146,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import type { Log } from '@ffmpeg/types/types/index';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Loader, Rabbit, AudioLines, ArrowBigDownDash, Download, Scissors } from "lucide-vue-next";
+import { Loader, Rabbit, AudioLines, ArrowBigDownDash, Download } from "lucide-vue-next";
 import { useIsMobile } from '@/composables/isMobileStore';
 import VideoCutter from "@/components/VideoCutter.vue";
 
@@ -139,6 +179,7 @@ const currentTime = ref(0);
 const resetVideoCutter = ref(false);
 const timerResetVideoCutter = ref<NodeJS.Timeout | null>(null);
 const isVideoPlaying = ref(false);
+const playbackSpeed = ref('1');
 
 const videoUrl = computed(() => {
     if (props.video) {
@@ -355,6 +396,43 @@ function listenKeyPress(e: KeyboardEvent) {
 
     videoPlayerRef.value.play();
 
+}
+
+function handleSpeedChange(speed: number) {
+    if (videoPlayerRef.value) {
+        videoPlayerRef.value.playbackRate = speed;
+    }
+    playbackSpeed.value = speed.toString();
+}
+
+const videoDimensions = computed(() => {
+    if (!videoPlayerRef.value) return '-';
+    return `${videoPlayerRef.value.videoWidth} x ${videoPlayerRef.value.videoHeight}`;
+});
+
+const videoFormat = computed(() => {
+    if (!props.video) return '-';
+    return props.video.blob.type.split('/')[1].toUpperCase();
+});
+
+const videoSize = computed(() => {
+    if (!props.video) return 0;
+    return props.video.blob.size;
+});
+
+function formatDuration(seconds: number): string {
+    if (!isFinite(seconds)) return '-';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function formatFileSize(bytes: number): string {
+    if (bytes === 0) return '-';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 onMounted(async() => {

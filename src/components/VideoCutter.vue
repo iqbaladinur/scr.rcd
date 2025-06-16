@@ -18,19 +18,32 @@
         </div>
         <div class="flex justify-between items-center mt-4 gap-4">
             <div class="flex items-center gap-6 rounded-lg border px-4 py-2">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-4">
                     <span class="text-xs font-medium text-muted-foreground">Start</span>
-                    <span class="text-sm font-medium">{{ (timeStamp.start).toFixed(2) }}s</span>
+                    <span class="text-xs font-medium">{{ (timeStamp.start).toFixed(2) }}s</span>
                 </div>
                 <div class="h-4 w-[1px] bg-border"></div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-4">
                     <span class="text-xs font-medium text-muted-foreground">End</span>
-                    <span class="text-sm font-medium text-red-500">{{ (timeStamp.end).toFixed(2) }}s</span>
+                    <span class="text-xs font-medium text-red-500">{{ (timeStamp.end).toFixed(2) }}s</span>
                 </div>
                 <div class="h-4 w-[1px] bg-border"></div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-4">
                     <span class="text-xs font-medium text-muted-foreground">Length</span>
-                    <span class="text-sm font-medium text-green-500">{{ (timeStamp.end - timeStamp.start).toFixed(2) }}s</span>
+                    <span class="text-xs font-medium text-green-500">{{ (timeStamp.end - timeStamp.start).toFixed(2) }}s</span>
+                </div>
+                <div class="h-4 w-[1px] bg-border"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs font-medium text-muted-foreground">Speed</span>
+                    <select v-model="playbackSpeed" @change="handleSpeedChange" class="text-xs bg-transparent border rounded px-2 py-1 text-white">
+                        <option value="0.25" class="text-black">0.25x</option>
+                        <option value="0.5" class="text-black">0.5x</option>
+                        <option value="0.75" class="text-black">0.75x</option>
+                        <option value="1" class="text-black">1x</option>
+                        <option value="1.25" class="text-black">1.25x</option>
+                        <option value="1.5" class="text-black">1.5x</option>
+                        <option value="2" class="text-black">2x</option>
+                    </select>
                 </div>
             </div>
             <slot></slot>
@@ -52,7 +65,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (event: 'resize', payload: { start: number, end: number }): void
+    (event: 'resize', payload: { start: number, end: number }): void,
+    (event: 'speed-change', speed: number): void
 }>();
 
 const waveLength = ref<HTMLDivElement | null>(null);
@@ -60,6 +74,7 @@ const audioCanvas = ref<HTMLCanvasElement | null>(null);
 const audioData = ref<number[]>([]);
 const animationFrame = ref<number | null>(null);
 const currentAnimationProgress = ref(0);
+const playbackSpeed = ref('1');
 
 async function analyzeAudio(url: string) {
     try {
@@ -251,6 +266,10 @@ function handleResize(side: 'left' | 'right', size: number) {
         percentageSize.right = Math.round(size);
     }
     emit('resize', timeStamp.value);
+}
+
+function handleSpeedChange() {
+    emit('speed-change', parseFloat(playbackSpeed.value));
 }
 </script>
 
