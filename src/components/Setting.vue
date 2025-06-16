@@ -5,117 +5,123 @@
                 <Settings class="size-5" />
             </Button>
         </DialogTrigger>
-        <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent class="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>Setting</DialogTitle>
                 <DialogDescription>
                     <div class="flex flex-col gap-4 min-h-[380px] pt-6">
-                        <fieldset class="rounded-lg border p-4 w-full">
-                            <legend class="-ml-1 px-1 text-sm font-bold">Video Quality Settings</legend>
-                            
-                            <!-- Auto-optimize button -->
-                            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div>
-                                        <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Auto-Optimize Settings</p>
-                                        <p class="text-xs text-blue-700 dark:text-blue-300">Automatically detect and apply optimal settings for your device</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <fieldset class="rounded-lg border p-4">
+                                <legend class="-ml-1 px-1 text-sm font-bold">Video Quality Settings</legend>
+                                
+                                <!-- Auto-optimize button -->
+                                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div>
+                                            <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Auto-Optimize Settings</p>
+                                            <p class="text-xs text-blue-700 dark:text-blue-300">Automatically detect and apply optimal settings for your device</p>
+                                        </div>
+                                        <Button 
+                                            @click="autoOptimizeSettings" 
+                                            size="sm" 
+                                            :disabled="isOptimizing"
+                                            class="bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            {{ isOptimizing ? 'Detecting...' : 'Auto-Optimize' }}
+                                        </Button>
                                     </div>
-                                    <Button 
-                                        @click="autoOptimizeSettings" 
-                                        size="sm" 
-                                        :disabled="isOptimizing"
-                                        class="bg-blue-600 hover:bg-blue-700"
+                                    <div v-if="deviceCapabilities" class="text-xs text-muted-foreground">
+                                        <p>Detected: {{ deviceCapabilities.maxResolution.toUpperCase() }} • {{ deviceCapabilities.supports60fps ? '60fps' : '30fps' }} • {{ deviceCapabilities.recommendedCodec.toUpperCase() }}</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Video Quality Mode -->
+                                <div class="mb-4">
+                                    <label class="text-sm font-medium mb-2 block">Resolution Quality</label>
+                                    <select 
+                                        v-model="videoQualityMode" 
+                                        @change="handleQualityChange"
+                                        class="w-full p-2 border rounded-lg bg-background"
                                     >
-                                        {{ isOptimizing ? 'Detecting...' : 'Auto-Optimize' }}
-                                    </Button>
+                                        <option value="auto">Auto (Optimal for device)</option>
+                                        <option value="hd">HD - 720p (1280x720)</option>
+                                        <option value="fhd">Full HD - 1080p (1920x1080)</option>
+                                        <option value="2k">2K - 1440p (2560x1440)</option>
+                                        <option value="4k">4K - 2160p (3840x2160)</option>
+                                        <option value="max">Maximum Available</option>
+                                    </select>
                                 </div>
-                                <div v-if="deviceCapabilities" class="text-xs text-muted-foreground">
-                                    <p>Detected: {{ deviceCapabilities.maxResolution.toUpperCase() }} • {{ deviceCapabilities.supports60fps ? '60fps' : '30fps' }} • {{ deviceCapabilities.recommendedCodec.toUpperCase() }}</p>
+
+                                <!-- Video Bitrate -->
+                                <div class="mb-4">
+                                    <label class="text-sm font-medium mb-2 block">Video Bitrate</label>
+                                    <select 
+                                        v-model="videoBitrate" 
+                                        @change="handleBitrateChange"
+                                        class="w-full p-2 border rounded-lg bg-background"
+                                    >
+                                        <option value="auto">Auto (Browser optimized)</option>
+                                        <option value="high">High Quality (8 Mbps)</option>
+                                        <option value="ultra">Ultra Quality (15 Mbps)</option>
+                                    </select>
                                 </div>
-                            </div>
-                            
-                            <!-- Video Quality Mode -->
-                            <div class="mb-4">
-                                <label class="text-sm font-medium mb-2 block">Resolution Quality</label>
-                                <select 
-                                    v-model="videoQualityMode" 
-                                    @change="handleQualityChange"
-                                    class="w-full p-2 border rounded-lg bg-background"
-                                >
-                                    <option value="auto">Auto (Optimal for device)</option>
-                                    <option value="hd">HD - 720p (1280x720)</option>
-                                    <option value="fhd">Full HD - 1080p (1920x1080)</option>
-                                    <option value="2k">2K - 1440p (2560x1440)</option>
-                                    <option value="4k">4K - 2160p (3840x2160)</option>
-                                    <option value="max">Maximum Available</option>
-                                </select>
-                            </div>
+                            </fieldset>
 
-                            <!-- Video Bitrate -->
-                            <div class="mb-4">
-                                <label class="text-sm font-medium mb-2 block">Video Bitrate</label>
-                                <select 
-                                    v-model="videoBitrate" 
-                                    @change="handleBitrateChange"
-                                    class="w-full p-2 border rounded-lg bg-background"
-                                >
-                                    <option value="auto">Auto (Browser optimized)</option>
-                                    <option value="high">High Quality (8 Mbps)</option>
-                                    <option value="ultra">Ultra Quality (15 Mbps)</option>
-                                </select>
-                            </div>
+                            <fieldset class="rounded-lg border p-4">
+                                <legend class="-ml-1 px-1 text-sm font-bold">Advanced Settings</legend>
+                                
+                                <!-- Advanced Mode Toggle -->
+                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
+                                    <label for="advanced-mode" class="text-sm">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <span>Advanced Video Mode</span>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" :side-offset="10">
+                                                    Enable advanced video processing<br>for better quality (uses more CPU)
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </label>
+                                    <Switch :checked="advancedVideoMode" id="advanced-mode" @update:checked="setAdvancedVideoMode" />
+                                </div>
 
-                            <!-- Advanced Mode Toggle -->
-                            <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
-                                <label for="advanced-mode" class="text-sm">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <span>Advanced Video Mode</span>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" :side-offset="10">
-                                                Enable advanced video processing<br>for better quality (uses more CPU)
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </label>
-                                <Switch :checked="advancedVideoMode" id="advanced-mode" @update:checked="setAdvancedVideoMode" />
-                            </div>
+                                <!-- Force 60fps -->
+                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
+                                    <label for="fhd60fps" class="text-sm">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <span>Force 60fps Recording</span>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" :side-offset="10">
+                                                    Force recording at 60fps<br>(may reduce quality on slower devices)
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </label>
+                                    <Switch :checked="forced60fpsFHD" id="fhd60fps" @update:checked="toggleForched60FPS" />
+                                </div>
 
-                            <!-- Force 60fps -->
-                            <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
-                                <label for="fhd60fps" class="text-sm">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <span>Force 60fps Recording</span>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" :side-offset="10">
-                                                Force recording at 60fps<br>(may reduce quality on slower devices)
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </label>
-                                <Switch :checked="forced60fpsFHD" id="fhd60fps" @update:checked="toggleForched60FPS" />
-                            </div>
-
-                            <!-- H.264 Encoding -->
-                            <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
-                                <label for="h264encode" class="text-sm">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <span>Force H.264 Codec</span>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" :side-offset="10">
-                                                Force H.264 encoding for better compatibility<br>(VP9 codec usually provides better quality)
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </label>
-                                <Switch :checked="forceEncodeWithH264" id="h264encode" @update:checked="setEncodeAsH264" />
-                            </div>
-                        </fieldset>
+                                <!-- H.264 Encoding -->
+                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
+                                    <label for="h264encode" class="text-sm">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <span>Force H.264 Codec</span>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" :side-offset="10">
+                                                    Force H.264 encoding for better compatibility<br>(VP9 codec usually provides better quality)
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </label>
+                                    <Switch :checked="forceEncodeWithH264" id="h264encode" @update:checked="setEncodeAsH264" />
+                                </div>
+                            </fieldset>
+                        </div>
                         <Suspense>
                             <SettingFormInputDevices />
                         </Suspense>

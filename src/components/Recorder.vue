@@ -39,6 +39,49 @@ const webcamContainerParent = ref<HTMLDivElement | null>(null);
 const startTime = ref<number>(0);
 const { camChanged, defaultCamera, defaultMic } = useCameraMicSetting();
 const isPausedRecord = ref<boolean>(false);
+const elapsedTime = ref<number>(0);
+const timerInterval = ref<number | null>(null);
+const timerStartTime = ref<number>(0);
+
+const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const startTimer = () => {
+    if (timerInterval.value) return;
+    timerStartTime.value = Date.now() - elapsedTime.value;
+    timerInterval.value = window.setInterval(() => {
+        elapsedTime.value = Date.now() - timerStartTime.value;
+    }, 1000);
+};
+
+const pauseTimer = () => {
+    if (timerInterval.value) {
+        clearInterval(timerInterval.value);
+        timerInterval.value = null;
+    }
+};
+
+const resumeTimer = () => {
+    if (!timerInterval.value) {
+        timerStartTime.value = Date.now() - elapsedTime.value;
+        timerInterval.value = window.setInterval(() => {
+            elapsedTime.value = Date.now() - timerStartTime.value;
+        }, 1000);
+    }
+};
+
+const stopTimer = () => {
+    if (timerInterval.value) {
+        clearInterval(timerInterval.value);
+        timerInterval.value = null;
+    }
+    elapsedTime.value = 0;
+    timerStartTime.value = 0;
+};
 
 const checkCameraAvailability = async () => {
     try {
@@ -101,6 +144,7 @@ const startRecordingWithAudioMic = async () => {
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
+        let actualRecordingStarted = false;
 
         mediaRecorder.value.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -108,8 +152,18 @@ const startRecordingWithAudioMic = async () => {
             }
         };
 
+        // Use onstart event to get accurate timing
+        mediaRecorder.value.onstart = () => {
+            if (!actualRecordingStarted) {
+                startTime.value = Date.now();
+                actualRecordingStarted = true;
+                startTimer();
+            }
+        };
+
         mediaRecorder.value.onstop = async() => {
             isRecording.value = false;
+            stopTimer();
             
             // Properly handle paused state when stopping
             if (isPausedRecord.value && pausedStart) {
@@ -222,11 +276,13 @@ const startRecording = async() => {
             if (!actualRecordingStarted) {
                 startTime.value = Date.now();
                 actualRecordingStarted = true;
+                startTimer();
             }
         };
 
         mediaRecorder.value.onstop = async () => {
             isRecording.value = false;
+            stopTimer();
             
             // Properly handle paused state when stopping
             if (isPausedRecord.value && pausedStart) {
@@ -575,8 +631,10 @@ const togglePauseRecording = () => {
     try {
         if (isPausedRecord.value && mediaRecorder.value.state === 'paused') {
             mediaRecorder.value.resume();
+            resumeTimer();
         } else if (!isPausedRecord.value && mediaRecorder.value.state === 'recording') {
             mediaRecorder.value.pause();
+            pauseTimer();
         }
     } catch (error: any) {
         console.error('Error toggling pause/resume:', error);
@@ -638,6 +696,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     webcamSrc.value?.removeEventListener('leavepictureinpicture', handleWebcamPiPLeave);
+    stopTimer();
 });
 
 const containerWebCamStyle = 'background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.95) 50%, rgba(0, 0, 0, 0.9) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 1rem; display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
@@ -747,6 +806,7 @@ const getCurrentQualityInfo = () => {
                             <button @click="stopRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-[1000ms]" :class="{ 'animate-pulse': !isPausedRecord }" style="background: rgba(234, 67, 53, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.3); color: rgb(234, 67, 53);" onmouseenter="this.style.background='rgba(234, 67, 53, 0.25)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(234, 67, 53, 0.15)'; this.style.transform='scale(1)'">
                                 <StopCircle class="size-4"></StopCircle>
                                 <span>Stop</span>
+                                <span class="ml-1 text-xs font-mono">{{ formatTime(elapsedTime) }}</span>
                             </button>
                             <button v-if="!mobile" @click="togglePauseRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.2); color: rgb(66, 133, 244);" onmouseenter="this.style.background='rgba(66, 133, 244, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(66, 133, 244, 0.12)'; this.style.transform='scale(1)'">
                                 <Pause v-if="!isPausedRecord" class="size-4"></Pause>

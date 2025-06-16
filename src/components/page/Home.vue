@@ -42,21 +42,21 @@ function toggleColorMode() {
 
         <!-- header and menu content -->
         <div class="flex flex-col">
-            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4 justify-between">
+            <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background/80 backdrop-blur-md px-4 justify-between">
                 <h1 v-if="!isMobile" class="text-xl font-semibold">SCR.RCD ({{ version }})</h1>
                 <div v-else class="p-2 flex items-center gap-2">
                     <img src="/logo-tone.png" alt="scr.rcd" class="rounded-md w-auto h-10">
                     <span class="text-xs">({{ version }})</span>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                    <Button size="sm" class="ml-auto gap-1.5 text-sm" @click="toggleColorMode()" variant="outline">
-                        <Sun v-if="colorMode === 'dark'" class="size-5" />
-                        <MoonStar v-else class="size-5 fill-black dark:fill-white" />
+                <div class="flex items-center justify-end gap-3">
+                    <Button size="sm" class="ml-auto gap-1.5 text-sm bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-all duration-200" @click="toggleColorMode()" variant="ghost">
+                        <Sun v-if="colorMode === 'dark'" class="size-5 text-amber-500" />
+                        <MoonStar v-else class="size-5 text-indigo-500" />
                     </Button>
                     <a href="https://github.com/iqbaladinur/scr.rcd" target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" class="ml-auto gap-1.5 text-sm" variant="outline">
-                            <Github class="size-5 fill-black dark:fill-white" />
-                            <span v-show="!isMobile" >Github</span>
+                        <Button size="sm" class="ml-auto gap-1.5 text-sm bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-all duration-200" variant="ghost">
+                            <Github class="size-5" />
+                            <span v-show="!isMobile" class="font-medium">Github</span>
                         </Button>
                     </a>
                 </div>
