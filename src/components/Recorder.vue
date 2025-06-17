@@ -866,17 +866,22 @@ const getCurrentQualityInfo = () => {
 <div ref="webcamContainerParent" :class="{ '!hidden': !enableCameraView }" class="z-[100] fixed bottom-10 right-10">
     <div ref="webcamContainer" :style="containerWebCamStyle">
         <video ref="webcamSrc" :style="webcamStyle" autoplay />
-        <div :style="buttonContainerStyle">
-            <button v-if="isRecording" id="pauseResumeButton" :style="buttonPauseStyle" :title="isPausedRecord ? 'Resume Recording' : 'Pause Recording'">
-                <Pause v-if="!isPausedRecord" style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Pause>
-                <Play v-else style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Play>
-            </button>
-            <button v-if="isRecording" id="stopRecordButton" :style="buttonStopStyle" title="Stop Recording">
-                <StopCircle style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></StopCircle>
-            </button>
-            <button id="stopButton" :style="buttonStopWebcamStyle" title="Close Webcam">
-                <X style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></X>
-            </button>
+        <div style="display: flex; flex-direction: row; gap: 4px;">
+            <div :style="buttonContainerStyle">
+                <button v-if="isRecording" id="pauseResumeButton" :style="buttonPauseStyle" :title="isPausedRecord ? 'Resume Recording' : 'Pause Recording'">
+                    <Pause v-if="!isPausedRecord" style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Pause>
+                    <Play v-else style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></Play>
+                </button>
+                <button v-if="isRecording" id="stopRecordButton" :style="buttonStopStyle" title="Stop Recording">
+                    <StopCircle style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></StopCircle>
+                </button>
+                <button id="stopButton" :style="buttonStopWebcamStyle" title="Close Webcam">
+                    <X style="width: 16px; height: 16px; color: rgba(255, 255, 255, 0.9);"></X>
+                </button>
+            </div>
+            <div :style="buttonContainerStyle">
+                <button :style="buttonStopWebcamStyle + ' color: white;'">{{ formatTime(elapsedTime) }}</button>
+            </div>
         </div>
     </div>
 </div>
