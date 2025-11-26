@@ -8,13 +8,13 @@
                         {{ loading.msg || '-' }}
                     </p>
                 </fieldset>
-            </div>  
+            </div>
             <div class="flex items-center justify-end gap-3">
-                <button @click="downloadFile(false)" class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(168, 85, 247, 0.3); color: rgb(168, 85, 247);" onmouseenter="this.style.background='rgba(168, 85, 247, 0.25)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(168, 85, 247, 0.2)'" onmouseleave="this.style.background='rgba(168, 85, 247, 0.15)'; this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                <button @click="downloadFile(false)" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                     <Download class="size-4"></Download>
                     <span>Webm</span>
                 </button>
-                <button @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed" style="background: rgba(236, 72, 153, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(236, 72, 153, 0.3); color: rgb(236, 72, 153);" onmouseenter="if(!this.disabled) { this.style.background='rgba(236, 72, 153, 0.25)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(236, 72, 153, 0.2)' }" onmouseleave="if(!this.disabled) { this.style.background='rgba(236, 72, 153, 0.15)'; this.style.transform='scale(1)'; this.style.boxShadow='none' }">
+                <button @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                     <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                     <Download v-else class="size-4"></Download>
                     <span>{{ loading.loadingScript ? 'Loading...' : 'Mp4' }}</span>
@@ -49,12 +49,12 @@
                         </audio>
                     </div>
                 </div>
-                
+
                 <!-- Video Metadata Sidebar -->
                 <div v-if="!isMobile" class="w-80 p-4 rounded-lg" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
                     <div class="relative">
                         <!-- Decorative gradient -->
-                        
+
                         <h3 class="text-lg font-semibold mb-4 relative dark:text-white text-black">
                             Video Information
                         </h3>
@@ -97,17 +97,17 @@
                 @speed-change="handleSpeedChange"
             >
                 <div class="flex-1 flex items-center justify-end">
-                    <Button size="sm" @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="gap-2" style="background: rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(168, 85, 247, 0.3); color: rgb(168, 85, 247);">
+                    <button @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                         <Download v-else class="size-4"></Download>
                         {{ loading.loadingScript ? 'Getting ready' : 'Export' }}
-                    </Button>
+                    </button>
                 </div>
             </VideoCutter>
-            <Button v-show="isMobile" class="mt-5 rounded-full" size="sm" variant="outline" @click="downloadFile(true)">
-                <ArrowBigDownDash class="size-4 mr-1"></ArrowBigDownDash>
+            <button v-show="isMobile" @click="downloadFile(true)" class="mt-5 flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
+                <ArrowBigDownDash class="size-4"></ArrowBigDownDash>
                 Download Audio
-            </Button>
+            </button>
         </div>
     </div>
     <div v-else class="flex-1 flex items-center justify-center flex-col gap-6 p-8">
@@ -118,7 +118,7 @@
                 <Rabbit class="size-12 text-blue-400/80"></Rabbit>
             </div>
         </div>
-        
+
         <div class="text-center space-y-3 max-w-md">
             <h3 class="text-xl font-semibold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
                 Ready for Action! 🎬
@@ -130,7 +130,7 @@
                 Pro tip: Press spacebar to play/pause videos when they're loaded ✨
             </p>
         </div>
-        
+
         <!-- Decorative elements -->
         <div class="flex items-center gap-4 opacity-30">
             <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
@@ -152,7 +152,7 @@ import VideoCutter from "@/components/VideoCutter.vue";
 
 const baseURLFFmpeg = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
 
-const ffmpeg = new FFmpeg(); 
+const ffmpeg = new FFmpeg();
 const loading= reactive({
     converting: false,
     loadedScript: false,
@@ -347,7 +347,7 @@ async function cutAndDownload() {
 
 const downloadFile = (audio: boolean = false) => {
     if (!videoUrl.value || !props.video) {
-        return 
+        return
     }
     const a = <HTMLAnchorElement>document.createElement('a');
     document.body.appendChild(a);
@@ -388,7 +388,7 @@ function listenKeyPress(e: KeyboardEvent) {
     if (e.code !== 'Space' || !videoPlayerRef.value) {
         return;
     }
-    
+
     if (isVideoPlaying.value) {
         videoPlayerRef.value.pause();
         return;

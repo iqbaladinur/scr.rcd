@@ -104,7 +104,7 @@ const audioConstraints:MediaTrackConstraints = {
 const PIPWINDOW = ref<any>(null);
 
 async function captureScreen(audio: boolean = false) {
-    const videoConstraints = advancedVideoMode.value 
+    const videoConstraints = advancedVideoMode.value
         ? {
             ...getVideoConstraints(videoQualityMode.value, forced60fpsFHD.value),
             aspectRatio: { ideal: 16/9 },
@@ -137,10 +137,10 @@ const startRecordingWithAudioMic = async () => {
         const audioStream = await captureAudio();
         const screenStream = await captureScreen();
         const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
-        
+
         const recorderOptions = getRecorderOptions(videoBitrate.value, forceEncodeWithH264.value);
         mediaRecorder.value = new MediaRecorder(stream, recorderOptions);
-        
+
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
@@ -164,13 +164,13 @@ const startRecordingWithAudioMic = async () => {
         mediaRecorder.value.onstop = async() => {
             isRecording.value = false;
             stopTimer();
-            
+
             // Properly handle paused state when stopping
             if (isPausedRecord.value && pausedStart) {
                 pausedDurations.push(Date.now() - pausedStart);
                 isPausedRecord.value = false;
             }
-            
+
             // Ensure we have recorded data
             if (recordedChunks.length === 0) {
                 toast({
@@ -180,15 +180,15 @@ const startRecordingWithAudioMic = async () => {
                 });
                 return;
             }
-            
+
             try {
                 const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
                 const tracks = stream.getTracks();
                 tracks.forEach((tr) => tr.stop());
                 stopWebCam();
-                
+
                 const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
-                
+
                 // Only apply duration fix if duration is valid
                 let finalBlob = recordedBlob;
                 if (duration > 0) {
@@ -199,7 +199,7 @@ const startRecordingWithAudioMic = async () => {
                         finalBlob = recordedBlob;
                     }
                 }
-                
+
                 saveToIndexedDB(finalBlob, true);
             } catch (error: any) {
                 console.error('Error processing recording:', error);
@@ -212,7 +212,7 @@ const startRecordingWithAudioMic = async () => {
         };
 
         mediaRecorder.value.onpause = () => {
-            pausedStart = Date.now(); 
+            pausedStart = Date.now();
             isPausedRecord.value = true;
         }
 
@@ -239,7 +239,7 @@ const startRecordingWithAudioMic = async () => {
         mediaRecorder.value.start(timeSlice);
         startTime.value = Date.now();
         isRecording.value = true;
-        
+
         // Add event listener for pause/resume button if PiP window exists
         addPauseResumeEventListener();
     } catch (error: any) {
@@ -256,10 +256,10 @@ const startRecording = async() => {
     try {
         recordedType.value = 'scr';
         const stream = await captureScreen(true);
-        
+
         const recorderOptions = getRecorderOptions(videoBitrate.value, forceEncodeWithH264.value);
         mediaRecorder.value = new MediaRecorder(stream, recorderOptions);
-        
+
         const recordedChunks: Blob[] = [];
         const pausedDurations: number[] = [];
         let pausedStart = Date.now();
@@ -283,13 +283,13 @@ const startRecording = async() => {
         mediaRecorder.value.onstop = async () => {
             isRecording.value = false;
             stopTimer();
-            
+
             // Properly handle paused state when stopping
             if (isPausedRecord.value && pausedStart) {
                 pausedDurations.push(Date.now() - pausedStart);
                 isPausedRecord.value = false;
             }
-            
+
             // Ensure we have recorded data
             if (recordedChunks.length === 0) {
                 toast({
@@ -299,7 +299,7 @@ const startRecording = async() => {
                 });
                 return;
             }
-            
+
             try {
                 const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
                 const tracks = stream.getTracks();
@@ -310,9 +310,9 @@ const startRecording = async() => {
                     };
                     tr.stop();
                 });
-                
+
                 const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
-                
+
                 // Only apply duration fix if duration is valid
                 let finalBlob = recordedBlob;
                 if (duration > 0) {
@@ -323,7 +323,7 @@ const startRecording = async() => {
                         finalBlob = recordedBlob;
                     }
                 }
-                
+
                 stopWebCam();
                 saveToIndexedDB(finalBlob, audioEnable);
             } catch (error: any) {
@@ -337,7 +337,7 @@ const startRecording = async() => {
         };
 
         mediaRecorder.value.onpause = () => {
-            pausedStart = Date.now(); 
+            pausedStart = Date.now();
             isPausedRecord.value = true;
         }
 
@@ -363,7 +363,7 @@ const startRecording = async() => {
         const timeSlice = advancedVideoMode.value ? 100 : 200;
         mediaRecorder.value.start(timeSlice);
         isRecording.value = true;
-        
+
         // Add event listener for pause/resume button if PiP window exists
         addPauseResumeEventListener();
     } catch (error: any) {
@@ -413,7 +413,7 @@ async function startWebcam() {
     if (!enableCameraView.value) {
         return;
     }
-    
+
     // Enhanced webcam constraints for better quality
     const webcamConstraints = {
         video: {
@@ -427,7 +427,7 @@ async function startWebcam() {
         },
         audio: false
     };
-    
+
     const stream = await navigator.mediaDevices.getUserMedia(webcamConstraints);
     webcamStream.value = stream;
     if (webcamSrc.value && webcamContainer.value) {
@@ -454,7 +454,7 @@ async function startWebcam() {
                 stopButton?.addEventListener('click', () => {
                     stopWebCam();
                 });
-                
+
                 // Add Material Design hover effects for stop button (webcam close)
                 if (stopButton) {
                     stopButton.addEventListener('mouseenter', () => {
@@ -462,14 +462,14 @@ async function startWebcam() {
                         stopButton.style.transform = 'scale(1.04)';
                         stopButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(95, 99, 104, 0.15)';
                     });
-                    
+
                     stopButton.addEventListener('mouseleave', () => {
                         stopButton.style.background = 'rgba(95, 99, 104, 0.12)';
                         stopButton.style.transform = 'scale(1)';
                         stopButton.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
                     });
                 }
-                
+
                 // If recording is active, add event listeners for recording controls
                 if (isRecording.value) {
                     addPauseResumeEventListener();
@@ -493,21 +493,21 @@ function addPauseResumeEventListener() {
     const addEventListenersToButtons = () => {
         const pauseResumeButton = PIPWINDOW.value?.document.querySelector('#pauseResumeButton');
         const stopButtonRecording = PIPWINDOW.value?.document.querySelector('#stopRecordButton');
-        
+
         if (pauseResumeButton) {
             // Remove existing listeners first
             pauseResumeButton.removeEventListener('click', togglePauseRecording);
-            
+
             // Add click listener
             pauseResumeButton.addEventListener('click', togglePauseRecording);
-            
+
             // Add Material Design hover effects
             pauseResumeButton.addEventListener('mouseenter', () => {
                 pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.2)';
                 pauseResumeButton.style.transform = 'scale(1.04)';
                 pauseResumeButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(66, 133, 244, 0.15)';
             });
-            
+
             pauseResumeButton.addEventListener('mouseleave', () => {
                 pauseResumeButton.style.background = 'rgba(66, 133, 244, 0.12)';
                 pauseResumeButton.style.transform = 'scale(1)';
@@ -518,17 +518,17 @@ function addPauseResumeEventListener() {
         if (stopButtonRecording) {
             // Remove existing listeners first
             stopButtonRecording.removeEventListener('click', stopRecording);
-            
+
             // Add click listener
             stopButtonRecording.addEventListener('click', stopRecording);
-            
+
             // Add hover effects
             stopButtonRecording.addEventListener('mouseenter', () => {
                 stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.2)';
                 stopButtonRecording.style.transform = 'scale(1.04)';
                 stopButtonRecording.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(234, 67, 53, 0.15)';
             });
-            
+
             stopButtonRecording.addEventListener('mouseleave', () => {
                 stopButtonRecording.style.background = 'rgba(234, 67, 53, 0.12)';
                 stopButtonRecording.style.transform = 'scale(1)';
@@ -539,9 +539,9 @@ function addPauseResumeEventListener() {
 
     // Try to add listeners immediately
     addEventListenersToButtons();
-    
+
     // If buttons not found, retry with a small delay
-    if (!PIPWINDOW.value.document.querySelector('#pauseResumeButton') || 
+    if (!PIPWINDOW.value.document.querySelector('#pauseResumeButton') ||
         !PIPWINDOW.value.document.querySelector('#stopRecordButton')) {
         setTimeout(addEventListenersToButtons, 50);
     }
@@ -561,7 +561,7 @@ function stopWebCam() {
                 const Globalwindow = window as any;
                 Globalwindow.documentPictureInPicture.window.close();
                 PIPWINDOW.value = null;
-            }    
+            }
         } catch (error: any) {
             toast({
                 title: 'Error closing window.',
@@ -585,7 +585,7 @@ function handleWebcamPiPLeave() {
     stopWebCam();
 }
 
-const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => { 
+const saveToIndexedDB = async (blob: Blob, audio: boolean = false) => {
     try {
         const now = new Date();
         const prefix = blob.type === 'audio/wav' ? 'aud' : 'vid';
@@ -713,7 +713,7 @@ const getCurrentQualityInfo = () => {
     const fps = forced60fpsFHD.value ? '60fps' : '30fps';
     const codec = forceEncodeWithH264.value ? 'H.264' : 'VP9/VP8';
     const advanced = advancedVideoMode.value ? 'Advanced' : 'Standard';
-    
+
     return {
         resolution: resolution.toUpperCase(),
         bitrate: bitrate === 'auto' ? 'Auto' : bitrate === 'high' ? 'High (8Mbps)' : 'Ultra (15Mbps)',
@@ -731,7 +731,7 @@ const getCurrentQualityInfo = () => {
         <div class="w-full p-3 relative overflow-hidden" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
             <!-- Decorative gradient overlay -->
             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
-            
+
             <div class="relative">
                 <div class="flex items-center gap-2 mb-2">
                     <div class="w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 animate-pulse"></div>
@@ -739,7 +739,7 @@ const getCurrentQualityInfo = () => {
                         Current Recording Quality
                     </h4>
                 </div>
-                
+
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <div class="flex items-center justify-between p-2 rounded-lg" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08);">
                         <span class="text-muted-foreground/80">Resolution</span>
@@ -758,7 +758,7 @@ const getCurrentQualityInfo = () => {
                         <span class="font-medium text-foreground/90 text-xs">{{ getCurrentQualityInfo().codec }}</span>
                     </div>
                 </div>
-                
+
                 <div class="mt-2 flex items-center justify-between p-2 rounded-lg text-xs" style="background: rgba(66, 133, 244, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.15);">
                     <span class="text-muted-foreground/80">Mode</span>
                     <span class="font-medium text-blue-600 dark:text-blue-400">{{ getCurrentQualityInfo().mode }}</span>
@@ -771,7 +771,7 @@ const getCurrentQualityInfo = () => {
             <div class="p-3 relative overflow-hidden" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
                 <!-- Decorative gradient -->
                 <div class="absolute inset-0 bg-gradient-to-r from-red-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
-                
+
                 <div class="relative">
                     <template v-if="!isRecording">
                         <template v-if="!mobile">
@@ -779,7 +779,7 @@ const getCurrentQualityInfo = () => {
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger as-child>
-                                            <button @click="startRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.2); color: rgb(66, 133, 244);" onmouseenter="this.style.background='rgba(66, 133, 244, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(66, 133, 244, 0.12)'; this.style.transform='scale(1)'">
+                                            <button @click="startRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                                                 <Play class="size-4"></Play>
                                                 <span>Screen</span>
                                             </button>
@@ -789,26 +789,26 @@ const getCurrentQualityInfo = () => {
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <button @click="startRecordingWithAudioMic()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(234, 67, 53, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.2); color: rgb(234, 67, 53);" onmouseenter="this.style.background='rgba(234, 67, 53, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(234, 67, 53, 0.12)'; this.style.transform='scale(1)'">
+                                <button @click="startRecordingWithAudioMic()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                                     <Mic class="size-4"></Mic>
                                     <span>+ Mic</span>
                                 </button>
                             </div>
                         </template>
-                        <button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(234, 67, 53, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.2); color: rgb(234, 67, 53);">
+                        <button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                             <Mic class="size-4"></Mic>
                             <span>Record Audio</span>
                         </button>
                     </template>
-                    
+
                     <template v-if="isRecording">
                         <div class="flex gap-2">
-                            <button @click="stopRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-[1000ms]" :class="{ 'animate-pulse': !isPausedRecord }" style="background: rgba(234, 67, 53, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(234, 67, 53, 0.3); color: rgb(234, 67, 53);" onmouseenter="this.style.background='rgba(234, 67, 53, 0.25)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(234, 67, 53, 0.15)'; this.style.transform='scale(1)'">
+                            <button @click="stopRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-red-400 to-red-600 text-white font-semibold rounded-[10px] transition-all duration-300" :class="{ 'animate-pulse [animation-duration:2s]': !isPausedRecord }">
                                 <StopCircle class="size-4"></StopCircle>
                                 <span>Stop</span>
                                 <span class="ml-1 text-xs font-mono">{{ formatTime(elapsedTime) }}</span>
                             </button>
-                            <button v-if="!mobile" @click="togglePauseRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150" style="background: rgba(66, 133, 244, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(66, 133, 244, 0.2); color: rgb(66, 133, 244);" onmouseenter="this.style.background='rgba(66, 133, 244, 0.2)'; this.style.transform='scale(1.02)'" onmouseleave="this.style.background='rgba(66, 133, 244, 0.12)'; this.style.transform='scale(1)'">
+                            <button v-if="!mobile" @click="togglePauseRecording()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold rounded-[10px] transition-all duration-300">
                                 <Pause v-if="!isPausedRecord" class="size-4"></Pause>
                                 <Play v-else class="size-4"></Play>
                                 <span>{{ isPausedRecord ? 'Resume' : 'Pause' }}</span>
@@ -817,7 +817,7 @@ const getCurrentQualityInfo = () => {
                     </template>
                 </div>
             </div>
-            
+
             <!-- Camera Toggle -->
             <div class="flex items-center gap-3 justify-between p-3 rounded-lg" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
                 <div class="flex items-center gap-2">
