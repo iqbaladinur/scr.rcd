@@ -1,35 +1,35 @@
 {
-  "name": "scr-rcd",
-  "private": true,
-  "version": "0.0.14-beta",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@ffmpeg/ffmpeg": "^0.12.10",
-    "@ffmpeg/util": "^0.12.1",
-    "@vueuse/core": "^10.9.0",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "dexie": "^4.0.4",
-    "fix-webm-duration": "^1.0.5",
-    "lucide-vue-next": "^0.376.0",
-    "radix-vue": "^1.7.2",
-    "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7",
-    "vaul-vue": "^0.1.0",
-    "vue": "^3.4.38"
-  },
-  "devDependencies": {
-    "@types/node": "^20.12.7",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "autoprefixer": "^10.4.19",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
-    "vue-tsc": "^2.0.6"
-  }
+    "name": "scr-rcd",
+    "private": true,
+    "version": "0.0.15-beta",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host",
+        "build": "vue-tsc && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@ffmpeg/ffmpeg": "^0.12.10",
+        "@ffmpeg/util": "^0.12.1",
+        "@vueuse/core": "^10.9.0",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "dexie": "^4.0.4",
+        "fix-webm-duration": "^1.0.5",
+        "lucide-vue-next": "^0.376.0",
+        "radix-vue": "^1.7.2",
+        "tailwind-merge": "^2.3.0",
+        "tailwindcss-animate": "^1.0.7",
+        "vaul-vue": "^0.1.0",
+        "vue": "^3.4.38"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.7",
+        "@vitejs/plugin-vue": "^5.0.4",
+        "autoprefixer": "^10.4.19",
+        "tailwindcss": "^3.4.3",
+        "typescript": "^5.2.2",
+        "vite": "^5.2.0",
+        "vue-tsc": "^2.0.6"
+    }
 }
