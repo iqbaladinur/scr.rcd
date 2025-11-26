@@ -13,6 +13,7 @@ import {
     TooltipProvider
 } from "@/components/ui/tooltip";
 import { use60FPS } from '@/composables/videoSettingStore';
+import { useAudioGain } from '@/composables/audioGainStore';
 import fixWebmDuration from "fix-webm-duration";
 import { useCameraMicSetting } from '@/composables/cameraMicSetting';
 import { convertBytesAdaptive } from '@/lib/utils';
@@ -27,6 +28,7 @@ const recordedVideos = ref<VideoSaved[]>([]);
 const { toast } = useToast();
 const { video: selectedVideo } = useVideo();
 const { forced60fpsFHD, forceEncodeWithH264, videoQualityMode, videoBitrate, advancedVideoMode, getVideoConstraints, getRecorderOptions } = use60FPS();
+const { micGainValue, systemGainValue } = useAudioGain();
 const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedType = ref<'scr' | 'scr_mic'>('scr');
@@ -141,20 +143,20 @@ const startRecordingWithAudioMic = async () => {
         const audioContext = new AudioContext();
         const audioDestination = audioContext.createMediaStreamDestination();
 
-        // Add microphone audio with higher gain (boost volume)
+        // Add microphone audio with adjustable gain
         const micSource = audioContext.createMediaStreamSource(audioStream);
         const micGain = audioContext.createGain();
-        micGain.gain.value = 1.5; // Boost mic volume by 50%
+        micGain.gain.value = micGainValue.value; // Use value from settings
         micSource.connect(micGain);
         micGain.connect(audioDestination);
 
-        // Add system audio with lower gain (reduce to make mic more prominent)
+        // Add system audio with adjustable gain
         const systemAudioTracks = screenStream.getAudioTracks();
         if (systemAudioTracks.length > 0) {
             const systemAudioStream = new MediaStream(systemAudioTracks);
             const systemSource = audioContext.createMediaStreamSource(systemAudioStream);
             const systemGain = audioContext.createGain();
-            systemGain.gain.value = 0.5; // Reduce system audio to 50%
+            systemGain.gain.value = systemGainValue.value; // Use value from settings
             systemSource.connect(systemGain);
             systemGain.connect(audioDestination);
         }
