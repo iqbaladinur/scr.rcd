@@ -10,15 +10,15 @@
                 </fieldset>
             </div>
             <div class="flex items-center justify-end gap-3">
-                <button @click="downloadFile(false)" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
+                <Button @click="downloadFile(false)" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                     <Download class="size-4"></Download>
                     <span>Webm</span>
-                </button>
-                <button @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                </Button>
+                <Button @click="downloadAsMp4()" :disabled="disabledDownloadAsMp4" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                     <Loader v-if="loading.converting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                     <Download v-else class="size-4"></Download>
                     <span>{{ loading.loadingScript ? 'Loading...' : 'Mp4' }}</span>
-                </button>
+                </Button>
             </div>
         </div>
         <div class="flex-1 mt-4 overflow-y-auto">
@@ -97,17 +97,17 @@
                 @speed-change="handleSpeedChange"
             >
                 <div class="flex-1 flex items-center justify-end">
-                    <button @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Button @click="cutAndDownload()" :disabled="disabledDownloadCuttedDuration" class="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Loader v-if="loading.cutting || loading.loadingScript" class="size-4 animate-spin"></Loader>
                         <Download v-else class="size-4"></Download>
                         {{ loading.loadingScript ? 'Getting ready' : 'Export' }}
-                    </button>
+                    </Button>
                 </div>
             </VideoCutter>
-            <button v-show="isMobile" @click="downloadFile(true)" class="mt-5 flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
+            <Button v-show="isMobile" @click="downloadFile(true)" class="mt-5 flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-[10px] transition-all duration-300">
                 <ArrowBigDownDash class="size-4"></ArrowBigDownDash>
                 Download Audio
-            </button>
+            </Button>
         </div>
     </div>
     <div v-else class="flex-1 flex items-center justify-center flex-col gap-6 p-8">
@@ -171,6 +171,8 @@ const audioPlayer = ref<HTMLAudioElement | undefined>(undefined);
 const videoPlayerRef = ref<HTMLVideoElement | undefined>();
 const isVertical = ref<boolean>(false);
 const videoDuration = ref<number>(0);
+const videoWidth = ref<number>(0);
+const videoHeight = ref<number>(0);
 const durationCut = reactive({
     start: 0,
     end: 0
@@ -360,6 +362,8 @@ function handleMetaData(e: Event) {
     const vidEl = <HTMLVideoElement>e.target;
     isVertical.value = vidEl.videoWidth < vidEl.videoHeight;
     videoDuration.value = vidEl.duration;
+    videoWidth.value = vidEl.videoWidth;
+    videoHeight.value = vidEl.videoHeight;
 }
 
 function handleSeek(time: { start: number, end: number }) {
@@ -406,8 +410,8 @@ function handleSpeedChange(speed: number) {
 }
 
 const videoDimensions = computed(() => {
-    if (!videoPlayerRef.value) return '-';
-    return `${videoPlayerRef.value.videoWidth} x ${videoPlayerRef.value.videoHeight}`;
+    if (videoWidth.value === 0 || videoHeight.value === 0) return '-';
+    return `${videoWidth.value} x ${videoHeight.value}`;
 });
 
 const videoFormat = computed(() => {
