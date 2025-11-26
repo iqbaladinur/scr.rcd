@@ -135,8 +135,34 @@ const startRecordingWithAudioMic = async () => {
     try {
         recordedType.value = 'scr_mic';
         const audioStream = await captureAudio();
-        const screenStream = await captureScreen();
-        const stream = new MediaStream([...screenStream.getTracks(), ...audioStream.getTracks()]);
+        const screenStream = await captureScreen(true); // Request system audio
+
+        // Mix system audio and microphone audio using Web Audio API
+        const audioContext = new AudioContext();
+        const audioDestination = audioContext.createMediaStreamDestination();
+
+        // Add microphone audio with higher gain (boost volume)
+        const micSource = audioContext.createMediaStreamSource(audioStream);
+        const micGain = audioContext.createGain();
+        micGain.gain.value = 1.5; // Boost mic volume by 50%
+        micSource.connect(micGain);
+        micGain.connect(audioDestination);
+
+        // Add system audio with lower gain (reduce to make mic more prominent)
+        const systemAudioTracks = screenStream.getAudioTracks();
+        if (systemAudioTracks.length > 0) {
+            const systemAudioStream = new MediaStream(systemAudioTracks);
+            const systemSource = audioContext.createMediaStreamSource(systemAudioStream);
+            const systemGain = audioContext.createGain();
+            systemGain.gain.value = 0.5; // Reduce system audio to 50%
+            systemSource.connect(systemGain);
+            systemGain.connect(audioDestination);
+        }
+
+        // Combine video from screen and mixed audio
+        const videoTracks = screenStream.getVideoTracks();
+        const mixedAudioTracks = audioDestination.stream.getAudioTracks();
+        const stream = new MediaStream([...videoTracks, ...mixedAudioTracks]);
 
         const recorderOptions = getRecorderOptions(videoBitrate.value, forceEncodeWithH264.value);
         mediaRecorder.value = new MediaRecorder(stream, recorderOptions);
@@ -183,8 +209,20 @@ const startRecordingWithAudioMic = async () => {
 
             try {
                 const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+                // Stop all tracks properly
                 const tracks = stream.getTracks();
                 tracks.forEach((tr) => tr.stop());
+
+                // Stop original streams
+                audioStream.getTracks().forEach((tr) => tr.stop());
+                screenStream.getTracks().forEach((tr) => tr.stop());
+
+                // Close audio context
+                if (audioContext.state !== 'closed') {
+                    await audioContext.close();
+                }
+
                 stopWebCam();
 
                 const duration = (Date.now() - startTime.value) - pausedDurations.reduce((acc, cur) => acc + cur, 0);
@@ -789,10 +827,19 @@ const getCurrentQualityInfo = () => {
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <button @click="startRecordingWithAudioMic()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-[10px] transition-all duration-300">
-                                    <Mic class="size-4"></Mic>
-                                    <span>+ Mic</span>
-                                </button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <button @click="startRecordingWithAudioMic()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-[10px] transition-all duration-300">
+                                                <Mic class="size-4"></Mic>
+                                                <span>+ Mic</span>
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" :side-offset="5">
+                                            Record screen with system audio + microphone
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </div>
                         </template>
                         <button v-if="mobile" @click="startRecordingOnlyAudioMic()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-[10px] transition-all duration-300">
