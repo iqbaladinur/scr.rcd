@@ -1,6 +1,6 @@
 <template>
-    <fieldset class="rounded-lg border p-4 w-full">
-        <legend class="-ml-1 px-1 text-sm font-bold">Mic and Camera Setting</legend>
+    <fieldset class="rounded-lg border p-3 w-full">
+        <legend class="-ml-1 px-1 text-xs font-bold">Mic and Camera Setting</legend>
         <div class="flex items-start w-full flex-col gap-2">
             <Select :default-value="defaultMic?.deviceId" @update:model-value="changeAudioInput">
                 <label class="text-xs">Microphone</label>

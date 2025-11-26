@@ -5,74 +5,135 @@
                 <Settings class="size-5" />
             </Button>
         </DialogTrigger>
-        <DialogContent class="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+        <DialogContent class="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader class="flex-shrink-0">
                 <DialogTitle>Setting</DialogTitle>
-                <DialogDescription>
-                    <div class="flex flex-col gap-4 min-h-[380px] pt-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <fieldset class="rounded-lg border p-4">
-                                <legend class="-ml-1 px-1 text-sm font-bold">Video Quality Settings</legend>
-                                
-                                <!-- Auto-optimize button -->
-                                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div>
-                                            <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Auto-Optimize Settings</p>
-                                            <p class="text-xs text-blue-700 dark:text-blue-300">Automatically detect and apply optimal settings for your device</p>
-                                        </div>
-                                        <Button 
-                                            @click="autoOptimizeSettings" 
-                                            size="sm" 
-                                            :disabled="isOptimizing"
-                                            class="bg-blue-600 hover:bg-blue-700"
-                                        >
-                                            {{ isOptimizing ? 'Detecting...' : 'Auto-Optimize' }}
-                                        </Button>
+            </DialogHeader>
+            <DialogDescription class="flex-1 overflow-y-auto">
+                <div class="flex flex-col gap-3 pt-4">
+                    <div class="grid grid-cols-3 gap-3">
+                            <fieldset class="rounded-lg border p-3">
+                                <legend class="-ml-1 px-1 text-xs font-bold">Audio Mix Settings</legend>
+
+                                <!-- Microphone Gain -->
+                                <div class="mb-3">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-xs font-medium">Microphone</label>
+                                        <span class="text-xs font-mono px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded">{{ micGainValue.toFixed(1) }}x</span>
                                     </div>
-                                    <div v-if="deviceCapabilities" class="text-xs text-muted-foreground">
-                                        <p>Detected: {{ deviceCapabilities.maxResolution.toUpperCase() }} • {{ deviceCapabilities.supports60fps ? '60fps' : '30fps' }} • {{ deviceCapabilities.recommendedCodec.toUpperCase() }}</p>
+                                    <input
+                                        type="range"
+                                        :value="micGainValue"
+                                        @input="handleMicGainChange"
+                                        min="0.1"
+                                        max="3.0"
+                                        step="0.1"
+                                        class="w-full h-1.5"
+                                    />
+                                    <div class="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                                        <span>0.1x</span>
+                                        <span>3.0x</span>
                                     </div>
                                 </div>
-                                
+
+                                <!-- System Audio Gain -->
+                                <div class="mb-3">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-xs font-medium">System Audio</label>
+                                        <span class="text-xs font-mono px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded">{{ systemGainValue.toFixed(1) }}x</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        :value="systemGainValue"
+                                        @input="handleSystemGainChange"
+                                        min="0.0"
+                                        max="2.0"
+                                        step="0.1"
+                                        class="w-full h-1.5"
+                                    />
+                                    <div class="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                                        <span>0.0x</span>
+                                        <span>2.0x</span>
+                                    </div>
+                                </div>
+
+                                <!-- Reset button -->
+                                <Button
+                                    @click="resetAudioGain"
+                                    size="sm"
+                                    variant="outline"
+                                    class="w-full text-xs h-7"
+                                >
+                                    Reset to Default
+                                </Button>
+
+                                <div class="mt-2 p-1.5 bg-amber-50 dark:bg-amber-950/30 rounded text-[10px] text-amber-800 dark:text-amber-200">
+                                    <p>For "Screen + Mic" mode</p>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="rounded-lg border p-3">
+                                <legend class="-ml-1 px-1 text-xs font-bold">Video Quality Settings</legend>
+
+                                <!-- Auto-optimize button -->
+                                <div class="mb-3 p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <div>
+                                            <p class="text-xs font-medium text-blue-900 dark:text-blue-100">Auto-Optimize</p>
+                                            <p class="text-[10px] text-blue-700 dark:text-blue-300">Detect optimal settings</p>
+                                        </div>
+                                        <Button
+                                            @click="autoOptimizeSettings"
+                                            size="sm"
+                                            :disabled="isOptimizing"
+                                            class="bg-blue-600 hover:bg-blue-700 text-xs h-7"
+                                        >
+                                            {{ isOptimizing ? 'Detecting...' : 'Optimize' }}
+                                        </Button>
+                                    </div>
+                                    <div v-if="deviceCapabilities" class="text-[10px] text-muted-foreground">
+                                        <p>{{ deviceCapabilities.maxResolution.toUpperCase() }} • {{ deviceCapabilities.supports60fps ? '60fps' : '30fps' }} • {{ deviceCapabilities.recommendedCodec.toUpperCase() }}</p>
+                                    </div>
+                                </div>
+
                                 <!-- Video Quality Mode -->
-                                <div class="mb-4">
-                                    <label class="text-sm font-medium mb-2 block">Resolution Quality</label>
-                                    <select 
-                                        v-model="videoQualityMode" 
+                                <div class="mb-3">
+                                    <label class="text-xs font-medium mb-1 block">Resolution</label>
+                                    <select
+                                        v-model="videoQualityMode"
                                         @change="handleQualityChange"
-                                        class="w-full p-2 border rounded-lg bg-background"
+                                        class="w-full p-1.5 text-xs border rounded-lg bg-background"
                                     >
-                                        <option value="auto">Auto (Optimal for device)</option>
-                                        <option value="hd">HD - 720p (1280x720)</option>
-                                        <option value="fhd">Full HD - 1080p (1920x1080)</option>
-                                        <option value="2k">2K - 1440p (2560x1440)</option>
-                                        <option value="4k">4K - 2160p (3840x2160)</option>
-                                        <option value="max">Maximum Available</option>
+                                        <option value="auto">Auto</option>
+                                        <option value="hd">HD - 720p</option>
+                                        <option value="fhd">FHD - 1080p</option>
+                                        <option value="2k">2K - 1440p</option>
+                                        <option value="4k">4K - 2160p</option>
+                                        <option value="max">Maximum</option>
                                     </select>
                                 </div>
 
                                 <!-- Video Bitrate -->
-                                <div class="mb-4">
-                                    <label class="text-sm font-medium mb-2 block">Video Bitrate</label>
-                                    <select 
-                                        v-model="videoBitrate" 
+                                <div class="mb-0">
+                                    <label class="text-xs font-medium mb-1 block">Bitrate</label>
+                                    <select
+                                        v-model="videoBitrate"
                                         @change="handleBitrateChange"
-                                        class="w-full p-2 border rounded-lg bg-background"
+                                        class="w-full p-1.5 text-xs border rounded-lg bg-background"
                                     >
-                                        <option value="auto">Auto (Browser optimized)</option>
-                                        <option value="high">High Quality (8 Mbps)</option>
-                                        <option value="ultra">Ultra Quality (15 Mbps)</option>
+                                        <option value="auto">Auto</option>
+                                        <option value="high">High (8 Mbps)</option>
+                                        <option value="ultra">Ultra (15 Mbps)</option>
                                     </select>
                                 </div>
                             </fieldset>
 
-                            <fieldset class="rounded-lg border p-4">
-                                <legend class="-ml-1 px-1 text-sm font-bold">Advanced Settings</legend>
-                                
+                            <fieldset class="rounded-lg border p-3">
+                                <legend class="-ml-1 px-1 text-xs font-bold">Advanced Settings</legend>
+
                                 <!-- Advanced Mode Toggle -->
-                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
-                                    <label for="advanced-mode" class="text-sm">
+                                <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                    <label for="advanced-mode" class="text-xs">
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger as-child>
@@ -88,8 +149,8 @@
                                 </div>
 
                                 <!-- Force 60fps -->
-                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg mb-4">
-                                    <label for="fhd60fps" class="text-sm">
+                                <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                    <label for="fhd60fps" class="text-xs">
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger as-child>
@@ -105,8 +166,8 @@
                                 </div>
 
                                 <!-- H.264 Encoding -->
-                                <div class="flex items-center gap-2 justify-between border py-2 px-3 rounded-lg">
-                                    <label for="h264encode" class="text-sm">
+                                <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg">
+                                    <label for="h264encode" class="text-xs">
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger as-child>
@@ -126,8 +187,7 @@
                             <SettingFormInputDevices />
                         </Suspense>
                     </div>
-                </DialogDescription>
-            </DialogHeader>
+            </DialogDescription>
         </DialogContent>
     </Dialog>
 </template>
@@ -151,22 +211,31 @@ import { Settings } from "lucide-vue-next";
 import { Switch } from "@/components/ui/switch";
 import SettingFormInputDevices from "@/components/SettingFormInputDevices.vue";
 import { use60FPS } from "@/composables/videoSettingStore";
+import { useAudioGain } from "@/composables/audioGainStore";
 import { ref } from 'vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 
-const { 
-    forced60fpsFHD, 
-    forceEncodeWithH264, 
-    videoQualityMode, 
-    videoBitrate, 
+const {
+    forced60fpsFHD,
+    forceEncodeWithH264,
+    videoQualityMode,
+    videoBitrate,
     advancedVideoMode,
-    set60fps, 
-    setEncodeAsH264, 
-    setVideoQualityMode, 
-    setVideoBitrate, 
+    set60fps,
+    setEncodeAsH264,
+    setVideoQualityMode,
+    setVideoBitrate,
     setAdvancedVideoMode,
     applyOptimalSettings
 } = use60FPS();
+
+const {
+    micGainValue,
+    systemGainValue,
+    setMicGain,
+    setSystemGain,
+    resetToDefaults
+} = useAudioGain();
 
 const { toast } = useToast();
 const isOptimizing = ref(false);
@@ -174,6 +243,24 @@ const deviceCapabilities = ref<any>(null);
 
 function toggleForched60FPS(value: boolean) {
     set60fps(value);
+}
+
+function handleMicGainChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    setMicGain(parseFloat(target.value));
+}
+
+function handleSystemGainChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    setSystemGain(parseFloat(target.value));
+}
+
+function resetAudioGain() {
+    resetToDefaults();
+    toast({
+        title: 'Audio Settings Reset',
+        description: 'Microphone and system audio volumes reset to default values',
+    });
 }
 
 function handleQualityChange(event: Event) {
@@ -190,7 +277,7 @@ async function autoOptimizeSettings() {
     try {
         isOptimizing.value = true;
         deviceCapabilities.value = await applyOptimalSettings();
-        
+
         toast({
             title: 'Settings Optimized',
             description: `Applied optimal settings for your device: ${deviceCapabilities.value.maxResolution.toUpperCase()} resolution, ${deviceCapabilities.value.recommendedBitrate} bitrate`,
