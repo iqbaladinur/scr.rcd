@@ -206,6 +206,13 @@ const startRecordingWithAudioMic = async () => {
                 );
                 enhancedTrack = enhancedRes;
                 recordVideoTracks = [enhancedRes.track];
+                if (enhancedRes.displaySurface !== "browser") {
+                    toast({
+                        title: "Cursor FX: partial tracking",
+                        description:
+                            "Full-screen / window capture: the cursor only follows while it is over this app. For a fully accurate cursor, record this tab instead.",
+                    });
+                }
             } catch (error: any) {
                 console.warn("CursorFX unavailable, recording raw:", error);
             }
@@ -380,6 +387,13 @@ const startRecording = async () => {
                 );
                 enhancedTrack = enhancedRes;
                 stream = new MediaStream([enhancedRes.track, ...audioTracks]);
+                if (enhancedRes.displaySurface !== "browser") {
+                    toast({
+                        title: "Cursor FX: partial tracking",
+                        description:
+                            "Full-screen / window capture: the cursor only follows while it is over this app. For a fully accurate cursor, record this tab instead.",
+                    });
+                }
             } catch (error: any) {
                 console.warn("CursorFX unavailable, recording raw:", error);
                 stream = rawStream;

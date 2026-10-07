@@ -103,6 +103,8 @@ export interface CursorFXOptions {
 export interface EnhancedTrack {
     track: MediaStreamTrack;
     canvas: HTMLCanvasElement;
+    /** 'browser' | 'monitor' | 'window' — what capture surface was detected */
+    displaySurface: string;
     dispose: () => void;
 }
 
@@ -189,7 +191,8 @@ export function createEnhancedVideoTrack(
     const capTrack = stream.getVideoTracks()[0];
 
     // --- pointer state -----------------------------------------------------
-    let inside = true;
+    let inside = false;
+    let cursorAlpha = 0;
     let targetX = 0.5;
     let targetY = 0.5;
     let smoothX = 0.5;
@@ -204,17 +207,25 @@ export function createEnhancedVideoTrack(
     let raf = 0;
     let running = true;
 
-    const dpr = window.devicePixelRatio || 1;
-
     function pageToNorm(e: PointerEvent): { x: number; y: number } {
         let nx = 0.5;
         let ny = 0.5;
+        // All normalizations are CSS-ratio based, so devicePixelRatio cancels
+        // out and constraint-based downscaling of the track doesn't matter.
         if (displaySurface === 'monitor') {
-            nx = (e.screenX * dpr) / srcW;
-            ny = (e.screenY * dpr) / srcH;
+            // Captured monitor assumed to be the primary one. On secondary
+            // multi-monitor setups screenX is offset and this is approximate.
+            nx = window.screen.width > 0 ? e.screenX / window.screen.width : 0.5;
+            ny = window.screen.height > 0 ? e.screenY / window.screen.height : 0.5;
         } else if (displaySurface === 'window') {
-            nx = ((e.screenX - window.screenX) * dpr) / srcW;
-            ny = ((e.screenY - window.screenY) * dpr) / srcH;
+            nx =
+                window.innerWidth > 0
+                    ? (e.screenX - window.screenX) / window.innerWidth
+                    : 0.5;
+            ny =
+                window.innerHeight > 0
+                    ? (e.screenY - window.screenY) / window.innerHeight
+                    : 0.5;
         } else {
             // browser / fallback: our viewport == captured tab
             nx = window.innerWidth > 0 ? e.clientX / window.innerWidth : 0.5;
@@ -315,9 +326,11 @@ export function createEnhancedVideoTrack(
         // --- cursor + effects (screen space) -------------------------------
         const cx = smoothX * W;
         const cy = smoothY * H;
-        // For monitor/window captures the cursor stays on-screen even when it
-        // leaves our browser, so keep drawing at the last known position.
-        const cursorVisible = displaySurface === "browser" ? inside : true;
+
+        // Fade the cursor in when the pointer is over the document and out
+        // once it leaves — the platform stops reporting position the moment
+        // the pointer is outside this window, so a frozen ghost would be a lie.
+        cursorAlpha += ((inside ? 1 : 0) - cursorAlpha) * (1 - Math.exp(-dt * 9));
 
         // click ripples
         if (options.click && ripples.length > 0) {
@@ -341,19 +354,22 @@ export function createEnhancedVideoTrack(
             }
         }
 
-        if (cursorVisible) {
+        if (cursorAlpha > 0.02) {
             // halo highlight behind the pointer
             if (options.highlight) {
+                ctx.globalAlpha = cursorAlpha * 0.16;
+                ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(cx, cy, cursorH * 0.55, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,255,255,0.16)';
                 ctx.fill();
+                ctx.globalAlpha = cursorAlpha * 0.35;
                 ctx.beginPath();
                 ctx.arc(cx, cy, cursorH * 0.72, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
+            ctx.globalAlpha = cursorAlpha;
             ctx.drawImage(
                 sprite,
                 cx - tipDX,
@@ -361,6 +377,7 @@ export function createEnhancedVideoTrack(
                 48 * cursorScale,
                 cursorH,
             );
+            ctx.globalAlpha = 1;
         }
 
         raf = requestAnimationFrame(draw);
@@ -386,5 +403,5 @@ export function createEnhancedVideoTrack(
         }
     };
 
-    return { track: capTrack, canvas, dispose };
+    return { track: capTrack, canvas, displaySurface, dispose };
 }
