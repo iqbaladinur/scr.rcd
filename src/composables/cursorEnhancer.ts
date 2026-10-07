@@ -153,12 +153,13 @@ export function createEnhancedVideoTrack(
     videoTrack: MediaStreamTrack,
     options: CursorFXOptions,
     fps: number = 30,
+    surfaceOverride?: string,
 ): EnhancedTrack {
     const settings = (videoTrack.getSettings() ?? {}) as any;
     const srcW = settings.width ?? 1920;
     const srcH = settings.height ?? 1080;
     const displaySurface: 'browser' | 'monitor' | 'window' | string =
-        settings.displaySurface ?? 'browser';
+        surfaceOverride ?? settings.displaySurface ?? 'browser';
 
     // Cap output canvas; the zoom still sees the full source.
     const capW = 1920;
@@ -179,7 +180,12 @@ export function createEnhancedVideoTrack(
     video.muted = true;
     video.playsInline = true;
     video.autoplay = true;
+    video.style.display = 'none';
     video.srcObject = new MediaStream([videoTrack]);
+    // Attach to the DOM: some browsers (and headless) don't advance media
+    // frames on an unattached <video> element.
+    document.body.appendChild(video);
+    video.play().catch(() => { /* autoplay will start it anyway */ });
 
     const sprite = createCursorSprite();
     // cursor roughly 3.5% of the smaller output edge
@@ -206,6 +212,23 @@ export function createEnhancedVideoTrack(
     let lastTs = performance.now();
     let raf = 0;
     let running = true;
+
+    // --- motion-based tracking (fallback for monitor/window capture) -------
+    // Pointer events stop the moment the cursor leaves our document, so for
+    // full-screen/window recording we derive zoom focus from pixel changes in
+    // the captured frames themselves — this even tracks other applications.
+    const mW = Math.max(32, Math.round(W / 12));
+    const mH = Math.max(24, Math.round(H / 12));
+    const mCanvas = document.createElement('canvas');
+    mCanvas.width = mW;
+    mCanvas.height = mH;
+    const mctx = mCanvas.getContext('2d')!;
+    const prevMotion = new Uint8ClampedArray(mW * mH * 4);
+    let hasPrevFrame = false;
+    let motionSX = 0.5;
+    let motionSY = 0.5;
+    let lastMotion = -1e9;
+    let motionChange = 0;
 
     function pageToNorm(e: PointerEvent): { x: number; y: number } {
         let nx = 0.5;
@@ -275,7 +298,47 @@ export function createEnhancedVideoTrack(
         smoothX += (targetX - smoothX) * k;
         smoothY += (targetY - smoothY) * k;
 
+        // --- motion analysis (raw video, before any overlay) ----------------
+        // Pointer position is only reported while the cursor is over OUR
+        // document, so for monitor/window (and other-tab) captures we derive
+        // the zoom focus from pixel changes in the captured frames instead —
+        // this tracks activity in ANY application on screen.
+        if (options.zoom && displaySurface !== "browser" && video.videoWidth > 0) {
+            mctx.drawImage(video, 0, 0, mW, mH);
+            const d = mctx.getImageData(0, 0, mW, mH).data;
+            if (hasPrevFrame) {
+                let changed = 0;
+                let sx = 0;
+                let sy = 0;
+                for (let i = 0; i < d.length; i += 4) {
+                    const dlt =
+                        Math.abs(d[i] - prevMotion[i]) +
+                        Math.abs(d[i + 1] - prevMotion[i + 1]) +
+                        Math.abs(d[i + 2] - prevMotion[i + 2]);
+                    if (dlt > 45) {
+                        changed++;
+                        const p = i >> 2;
+                        sx += p % mW;
+                        sy += ((p / mW) | 0);
+                    }
+                }
+                motionChange = changed / (mW * mH);
+                if (motionChange > 0.0025 && changed >= 8) {
+                    const mk = 1 - Math.exp(-dt * 5);
+                    motionSX += (sx / changed / mW - motionSX) * mk;
+                    motionSY += (sy / changed / mH - motionSY) * mk;
+                    lastMotion = now;
+                }
+            }
+            prevMotion.set(d);
+            hasPrevFrame = true;
+        } else {
+            motionChange = 0;
+        }
+
         // --- auto zoom -----------------------------------------------------
+        let focusX = smoothX;
+        let focusY = smoothY;
         if (options.zoom) {
             // movement speed over the last 250ms (source px / s)
             let speed = 0;
@@ -288,11 +351,25 @@ export function createEnhancedVideoTrack(
                 const span = (last.t - first.t) / 1000 || 0.001;
                 speed = dist / span;
             }
-            // zoom only while actively moving + cursor still inside
-            const active = inside && speed > 70 && now - latestMove < 260;
-            if (active) {
+            // pointer tracking wins while it is live; otherwise fall back to
+            // the most recent activity centroid from frame analysis.
+            const ptrActive = inside && speed > 70 && now - latestMove < 260;
+            const motActive = motionChange > 0.0025 && now - lastMotion < 300;
+            if (ptrActive) {
+                focusX = smoothX;
+                focusY = smoothY;
                 const sNorm = Math.min(1, speed / 1400);
-                zoomTarget = 1 + (options.zoomMax - 1) * (1 - (1 - sNorm) * (1 - sNorm));
+                zoomTarget =
+                    1 + (options.zoomMax - 1) * (1 - (1 - sNorm) * (1 - sNorm));
+            } else if (motActive) {
+                focusX = motionSX;
+                focusY = motionSY;
+                const mNorm = Math.min(
+                    1,
+                    0.15 + (motionChange - 0.0025) * 60,
+                );
+                zoomTarget =
+                    1 + (options.zoomMax - 1) * (1 - (1 - mNorm) * (1 - mNorm));
             } else {
                 zoomTarget = 1;
             }
@@ -304,8 +381,8 @@ export function createEnhancedVideoTrack(
 
         // keep the focused point in bounds so no background shows
         const half = Math.min(0.5, 0.5 / Math.max(zoom, 1.0001));
-        const fx = Math.min(Math.max(smoothX, half), 1 - half);
-        const fy = Math.min(Math.max(smoothY, half), 1 - half);
+        const fx = Math.min(Math.max(focusX, half), 1 - half);
+        const fy = Math.min(Math.max(focusY, half), 1 - half);
 
         // --- frame ---------------------------------------------------------
         ctx.clearRect(0, 0, W, H);

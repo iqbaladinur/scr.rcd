@@ -206,11 +206,15 @@ const startRecordingWithAudioMic = async () => {
                 );
                 enhancedTrack = enhancedRes;
                 recordVideoTracks = [enhancedRes.track];
+                videoTracks[0].addEventListener(
+                    "ended",
+                    handleSourceTrackEnded,
+                );
                 if (enhancedRes.displaySurface !== "browser") {
                     toast({
                         title: "Cursor FX: partial tracking",
                         description:
-                            "Full-screen / window capture: the cursor only follows while it is over this app. For a fully accurate cursor, record this tab instead.",
+                            "Zoom follows on-screen activity anywhere (works in full-screen/app captures). Cursor & click FX only track while the pointer is over this app — record this tab for the full effect.",
                     });
                 }
             } catch (error: any) {
@@ -387,11 +391,15 @@ const startRecording = async () => {
                 );
                 enhancedTrack = enhancedRes;
                 stream = new MediaStream([enhancedRes.track, ...audioTracks]);
+                videoTrack.addEventListener(
+                    "ended",
+                    handleSourceTrackEnded,
+                );
                 if (enhancedRes.displaySurface !== "browser") {
                     toast({
                         title: "Cursor FX: partial tracking",
                         description:
-                            "Full-screen / window capture: the cursor only follows while it is over this app. For a fully accurate cursor, record this tab instead.",
+                            "Zoom follows on-screen activity anywhere (works in full-screen/app captures). Cursor & click FX only track while the pointer is over this app — record this tab for the full effect.",
                     });
                 }
             } catch (error: any) {
@@ -805,6 +813,15 @@ const stopRecording = () => {
         } else {
             mediaRecorder.value.stop();
         }
+    }
+};
+
+// Mirror native MediaRecorder behavior: when the user stops the screen share
+// from the browser's capture indicator, the source track ends — end the
+// recording too (the canvas track we record from never ends by itself).
+const handleSourceTrackEnded = () => {
+    if (isRecording.value && mediaRecorder.value) {
+        stopRecording();
     }
 };
 
