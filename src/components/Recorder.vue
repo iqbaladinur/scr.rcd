@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/tooltip";
 import { use60FPS } from "@/composables/videoSettingStore";
 import { useAudioGain } from "@/composables/audioGainStore";
+import {
+    useCursorEnhancer,
+    createEnhancedVideoTrack,
+    type EnhancedTrack,
+} from "@/composables/cursorEnhancer";
 import fixWebmDuration from "fix-webm-duration";
 import { useCameraMicSetting } from "@/composables/cameraMicSetting";
 import { convertBytesAdaptive } from "@/lib/utils";
@@ -37,8 +42,16 @@ const {
     getRecorderOptions,
 } = use60FPS();
 const { micGainValue, systemGainValue } = useAudioGain();
+const {
+    cursorFXEnabled,
+    cursorHighlight,
+    clickEffect,
+    autoZoom,
+    zoomMax,
+} = useCursorEnhancer();
 const isRecording = ref<boolean>(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
+let enhancedTrack: EnhancedTrack | null = null;
 const recordedType = ref<"scr" | "scr_mic">("scr");
 const enableCameraView = ref<boolean>(false);
 const disableCameraView = ref<boolean>(false);
@@ -178,7 +191,29 @@ const startRecordingWithAudioMic = async () => {
         // Combine video from screen and mixed audio
         const videoTracks = screenStream.getVideoTracks();
         const mixedAudioTracks = audioDestination.stream.getAudioTracks();
-        const stream = new MediaStream([...videoTracks, ...mixedAudioTracks]);
+        let recordVideoTracks = videoTracks;
+        if (cursorFXEnabled.value && videoTracks.length > 0) {
+            try {
+                const enhancedRes = createEnhancedVideoTrack(
+                    videoTracks[0],
+                    {
+                        highlight: cursorHighlight.value,
+                        click: clickEffect.value,
+                        zoom: autoZoom.value,
+                        zoomMax: zoomMax.value,
+                    },
+                    forced60fpsFHD.value ? 60 : 30,
+                );
+                enhancedTrack = enhancedRes;
+                recordVideoTracks = [enhancedRes.track];
+            } catch (error: any) {
+                console.warn("CursorFX unavailable, recording raw:", error);
+            }
+        }
+        const stream = new MediaStream([
+            ...recordVideoTracks,
+            ...mixedAudioTracks,
+        ]);
 
         const recorderOptions = getRecorderOptions(
             videoBitrate.value,
@@ -238,6 +273,8 @@ const startRecordingWithAudioMic = async () => {
                 // Stop original streams
                 audioStream.getTracks().forEach((tr) => tr.stop());
                 screenStream.getTracks().forEach((tr) => tr.stop());
+                enhancedTrack?.dispose();
+                enhancedTrack = null;
 
                 // Close audio context
                 if (audioContext.state !== "closed") {
@@ -324,7 +361,32 @@ const startRecordingWithAudioMic = async () => {
 const startRecording = async () => {
     try {
         recordedType.value = "scr";
-        const stream = await captureScreen(true);
+        const rawStream = await captureScreen(true);
+        const rawTracks = rawStream.getTracks();
+        const videoTrack = rawTracks.find((t) => t.kind === "video");
+        const audioTracks = rawTracks.filter((t) => t.kind === "audio");
+        let stream: MediaStream;
+        if (cursorFXEnabled.value && videoTrack) {
+            try {
+                const enhancedRes = createEnhancedVideoTrack(
+                    videoTrack,
+                    {
+                        highlight: cursorHighlight.value,
+                        click: clickEffect.value,
+                        zoom: autoZoom.value,
+                        zoomMax: zoomMax.value,
+                    },
+                    forced60fpsFHD.value ? 60 : 30,
+                );
+                enhancedTrack = enhancedRes;
+                stream = new MediaStream([enhancedRes.track, ...audioTracks]);
+            } catch (error: any) {
+                console.warn("CursorFX unavailable, recording raw:", error);
+                stream = rawStream;
+            }
+        } else {
+            stream = rawStream;
+        }
 
         const recorderOptions = getRecorderOptions(
             videoBitrate.value,
@@ -384,6 +446,8 @@ const startRecording = async () => {
                     }
                     tr.stop();
                 });
+                enhancedTrack?.dispose();
+                enhancedTrack = null;
 
                 const duration =
                     Date.now() -

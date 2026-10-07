@@ -182,6 +182,73 @@
                                     <Switch :checked="forceEncodeWithH264" id="h264encode" @update:checked="setEncodeAsH264" />
                                 </div>
                             </fieldset>
+
+                            <fieldset class="rounded-lg border p-3">
+                                <legend class="-ml-1 px-1 text-xs font-bold">Cinematic Cursor FX</legend>
+
+                                <!-- Master toggle -->
+                                <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                    <label for="cursorfx-enable" class="text-xs">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <span>Enable Cursor FX</span>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" :side-offset="10">
+                                                    Bakes a cinematic cursor into the recording:<br>smooth pointer, click ripples &amp; auto zoom.<br>Best when recording this tab.
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </label>
+                                    <Switch :checked="cursorFXEnabled" id="cursorfx-enable" @update:checked="setEnabled" />
+                                </div>
+
+                                <template v-if="cursorFXEnabled">
+                                    <!-- Highlight -->
+                                    <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                        <label for="cursorfx-highlight" class="text-xs">Cursor Highlight</label>
+                                        <Switch :checked="cursorHighlight" id="cursorfx-highlight" @update:checked="setHighlight" />
+                                    </div>
+
+                                    <!-- Click ripple -->
+                                    <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                        <label for="cursorfx-click" class="text-xs">Click Ripple</label>
+                                        <Switch :checked="clickEffect" id="cursorfx-click" @update:checked="setClickEffect" />
+                                    </div>
+
+                                    <!-- Auto zoom -->
+                                    <div class="flex items-center gap-2 justify-between border py-1.5 px-2 rounded-lg mb-2">
+                                        <label for="cursorfx-zoom" class="text-xs">Auto Zoom to Cursor</label>
+                                        <Switch :checked="autoZoom" id="cursorfx-zoom" @update:checked="setAutoZoom" />
+                                    </div>
+
+                                    <!-- Zoom intensity -->
+                                    <div class="mb-1">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="text-xs font-medium">Zoom Intensity</label>
+                                            <span class="text-xs font-mono px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded">{{ zoomMax.toFixed(1) }}x</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            :value="zoomMax"
+                                            @input="handleZoomMaxChange"
+                                            min="1.5"
+                                            max="3.0"
+                                            step="0.1"
+                                            :disabled="!autoZoom"
+                                            class="w-full h-1.5 disabled:opacity-40"
+                                        />
+                                        <div class="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                                            <span>1.5x</span>
+                                            <span>3.0x</span>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="mt-2 p-1.5 bg-purple-50 dark:bg-purple-950/30 rounded text-[10px] text-purple-800 dark:text-purple-200">
+                                    <p>Fully automatic — no editing needed.</p>
+                                </div>
+                            </fieldset>
                         </div>
                         <Suspense>
                             <SettingFormInputDevices />
@@ -212,6 +279,7 @@ import { Switch } from "@/components/ui/switch";
 import SettingFormInputDevices from "@/components/SettingFormInputDevices.vue";
 import { use60FPS } from "@/composables/videoSettingStore";
 import { useAudioGain } from "@/composables/audioGainStore";
+import { useCursorEnhancer } from "@/composables/cursorEnhancer";
 import { ref } from 'vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 
@@ -237,6 +305,19 @@ const {
     resetToDefaults
 } = useAudioGain();
 
+const {
+    cursorFXEnabled,
+    cursorHighlight,
+    clickEffect,
+    autoZoom,
+    zoomMax,
+    setEnabled,
+    setHighlight,
+    setClickEffect,
+    setAutoZoom,
+    setZoomMax,
+} = useCursorEnhancer();
+
 const { toast } = useToast();
 const isOptimizing = ref(false);
 const deviceCapabilities = ref<any>(null);
@@ -253,6 +334,11 @@ function handleMicGainChange(event: Event) {
 function handleSystemGainChange(event: Event) {
     const target = event.target as HTMLInputElement;
     setSystemGain(parseFloat(target.value));
+}
+
+function handleZoomMaxChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    setZoomMax(parseFloat(target.value));
 }
 
 function resetAudioGain() {

@@ -24,6 +24,8 @@ SCR.RCD is a web-based screen recording application that allows users to record 
 - [x] **Enhanced Audio Quality:** CD quality audio (44.1 kHz) with improved bitrate and echo cancellation.
 - [x] **Quality Information Display:** Real-time display of active recording quality settings.
 - [x] **Playback Speed Control:** Adjust video playback rates in both VideoCutter and VideoPlayer components.
+- [x] **Cinematic Cursor FX:** A polished cursor is baked into the recording automatically — smooth pointer motion, white highlight halo and click ripples, like a pro screen-cast studio, with zero editing.
+- [x] **Auto Zoom to Cursor:** Screen Studio-style Ken Burns effect that smoothly zooms toward your cursor as you move and eases back out when idle. Fully automatic, adjustable intensity.
 - [ ] whats next ...?
 
 ## Development
